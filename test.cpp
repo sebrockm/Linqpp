@@ -20,5 +20,11 @@ int main()
     if (From(v).Skip(3).Take(1).Count() != 1)
         throw 4;
 
+    std::list<int> l = {6,7,8,9};
+    int j = 1;
+    for (auto i : From(v).Concat(l))
+        if (i != j++)
+            throw 5;
+
     std::cout << "All tests passed" << std::endl;
 }

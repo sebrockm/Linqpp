@@ -1,8 +1,11 @@
 #pragma once
 
+#include "ConcatIterator.hpp"
+
 #include <iterator>
 #include <algorithm>
 #include <vector>
+#include <list>
 
 namespace Linqpp
 {
@@ -48,6 +51,17 @@ namespace Linqpp
 
 		template <class Predicate> 
 		bool All(Predicate predicate) const { return std::all_of(_first, _last, predicate); }
+
+        template <class Container>
+        auto Concat(Container&& container) const
+        {
+            auto cBegin = std::begin(std::forward<Container>(container));
+            auto cEnd = std::end(std::forward<Container>(container));
+            auto first = CreateConcatIterator(_first, _last, cBegin, cBegin);
+            auto last = CreateConcatIterator(_last, _last, cBegin, cEnd);
+
+            return From(first, last);
+        }
 
 		size_t Count() const { return std::distance(_first, _last); }
 
