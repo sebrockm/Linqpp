@@ -1,5 +1,8 @@
+#pragma once
+
 #include <iterator>
 #include <algorithm>
+#include <vector>
 
 namespace Linqpp
 {
@@ -9,7 +12,7 @@ namespace Linqpp
 	template <class Iterator>
 	auto From(Iterator first, Iterator last)
 	{
-		return Enumerable<Iterator>(first, last);
+		return Enumeration<Iterator>(first, last);
 	}
 
 	template <class Container>
