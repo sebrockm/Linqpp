@@ -4,6 +4,21 @@
 namespace Linqpp
 {
 	template <class Iterator>
+	class Enumeration;
+
+	template <class Iterator>
+	auto From(Iterator first, Iterator last)
+	{
+		return Enumerable<Iterator>(first, last);
+	}
+
+	template <class Container>
+	auto From(Container&& container)
+	{
+		return From(std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)));
+	}
+
+	template <class Iterator>
 	class Enumeration
 	{
 	private:
@@ -33,22 +48,10 @@ namespace Linqpp
 
 		size_t Count() const { return std::distance(_first, _last); }
 
-		auto Skip(size_t n) const { return Create(std::next(_first, n), _last); }
+		auto Skip(size_t n) const { return From(std::next(_first, n), _last); }
 
-		auto Take(size_t n) const { return Create(_first, std::next(_first, n)); }
+		auto Take(size_t n) const { return From(_first, std::next(_first, n)); }
 
 		auto ToVector() const { return std::vector<value_type>(_first, _last); }
 	};
-
-	template <class Iterator>
-	auto From(Iterator first, Iterator last)
-	{
-		return Enumerable<Iterator>(first, last);
-	}
-
-	template <class Container>
-	auto From(Container&& container)
-	{
-		return From(std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)));
-	}
 }
