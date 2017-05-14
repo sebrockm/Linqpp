@@ -1,8 +1,21 @@
 #include "Enumeration.hpp"
+#include "Yield.hpp"
 
 #include <iostream>
 
 using namespace Linqpp;
+
+auto testYield()
+{
+	auto spYielder = Yielder<int>::Create();
+	spYielder->Start([=]()
+	{
+		spYielder->Yield(-17);
+		for (int i = 0; i < 17; ++i)
+			spYielder->Yield(i);
+	});
+	return spYielder->Return();
+}
 
 int main()
 {
@@ -25,6 +38,9 @@ int main()
     for (auto i : From(v).Concat(l))
         if (i != j++)
             throw 5;
+
+	for (auto i : testYield().Concat(v))
+		std::cout << i << " ";
 
     std::cout << "All tests passed" << std::endl;
 }

@@ -1,5 +1,5 @@
 all: *.cpp *.hpp
-	g++ -std=c++14 test.cpp -o test.out -Wall -pedantic -O3
+	g++-5 -std=c++1y test.cpp -o test.out -Wall -pedantic -O3 -pthread
 
 test: all
 	./test.out
