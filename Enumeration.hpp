@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConcatIterator.hpp"
+#include "TakeIterator.hpp"
 
 #include <iterator>
 #include <algorithm>
@@ -67,7 +68,7 @@ namespace Linqpp
 
 		auto Skip(size_t n) const { return From(std::next(_first, n), _last); }
 
-		auto Take(size_t n) const { return From(_first, std::next(_first, n)); }
+		auto Take(size_t n) const { return GetEnumeratorFromTake(_first, n, _last); }
 
 		auto ToVector() const { return std::vector<value_type>(_first, _last); }
 	};

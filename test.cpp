@@ -41,6 +41,11 @@ int main()
 
 	for (auto i : testYield().Concat(v))
 		std::cout << i << " ";
+    std::cout << std::endl;
+
+    for (auto i : testYield().Take(100))
+        std::cout << i << " ";
+    std::cout << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 }
