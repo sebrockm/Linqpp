@@ -2,6 +2,7 @@
 
 #include "ConcatIterator.hpp"
 #include "TakeIterator.hpp"
+#include "SelectIterator.hpp"
 
 #include <iterator>
 #include <algorithm>
@@ -65,6 +66,9 @@ namespace Linqpp
         }
 
 		size_t Count() const { return std::distance(_first, _last); }
+
+        template <class Function>
+        auto Select(Function function) const { return From(CreateSelectIterator(_first, function), CreateSelectIterator(_last, function)); }
 
 		auto Skip(size_t n) const { return From(std::next(_first, n), _last); }
 

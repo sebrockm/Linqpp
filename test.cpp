@@ -47,5 +47,9 @@ int main()
         std::cout << i << " ";
     std::cout << std::endl;
 
+    for (auto i : From(v).Select([](auto i) { return '\'' + std::to_string(i) + '\''; }))
+        std::cout << i << " ";
+    std::cout << std::endl;
+
     std::cout << "All tests passed" << std::endl;
 }
