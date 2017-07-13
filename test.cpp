@@ -51,5 +51,9 @@ int main()
         std::cout << i << " ";
     std::cout << std::endl;
 
+    for (auto i : From(v).Where([](auto i) { return i % 2 == 0; }))
+        std:: cout << i << " ";
+    std::cout << std::endl;
+
     std::cout << "All tests passed" << std::endl;
 }
