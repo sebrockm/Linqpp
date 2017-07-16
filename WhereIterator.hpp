@@ -1,11 +1,11 @@
 #pragma once
 
-#include <iterator>
+#include "IteratorAdapter.hpp"
 
 namespace Linqpp
 {
     template <class Iterator, class Predicate>
-    class WhereIterator
+    class WhereIterator : public IteratorAdapter<WhereIterator<Iterator, Predicate>>
     {
     // Fields
     private:
@@ -26,10 +26,7 @@ namespace Linqpp
     // Constructors, destructor
     public:
         WhereIterator(Iterator first, Iterator last, Predicate predicate)
-            : _first(first), _last(last), _predicate(predicate)
-        {
-            AdvanceUntilFit();
-        }
+            : _first(first), _last(last), _predicate(predicate) { AdvanceUntilFit(); }
 
         WhereIterator() = default;
         WhereIterator(WhereIterator const&) = default;
@@ -37,21 +34,13 @@ namespace Linqpp
         WhereIterator& operator=(WhereIterator const&) = default;
         WhereIterator& operator=(WhereIterator&&) = default;
 
-    // InputIterator
+    // IteratorAdapter
     public:
-        bool operator==(WhereIterator other) const { return _first == other._first; }
-        bool operator!=(WhereIterator other) const { return !(*this == other); }
-        decltype(auto) operator*() { return *_first; }
-        decltype(auto) operator*() const { return *_first; }
-        decltype(auto) operator->() { return std::addressof(*_first); }
-        decltype(auto) operator->() const { return std::addressof(*_first); }
-        WhereIterator& operator++() { ++_first; AdvanceUntilFit(); return *this; }
-        WhereIterator operator++(int) { auto copy = *this; ++*this; return copy; }
-
-    // BidirectionalIterator
-    public:
-        WhereIterator& operator--() { --_first; DecreaseUntilFit(); return *this; }
-        WhereIterator operator--(int) { auto copy = *this; --*this; return copy; }
+        bool Equals(WhereIterator const& other) const { return _first == other._first; }
+        decltype(auto) Get() { return *_first; }
+        decltype(auto) Get() const { return *_first; }
+        void Increment() { ++_first; AdvanceUntilFit(); }
+        void Decrement() { --_first; DecreaseUntilFit(); }
 
     // Internals
     private:

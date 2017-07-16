@@ -1,11 +1,11 @@
 #pragma once
 
-#include <iterator>
+#include "IteratorAdapter.hpp"
 
 namespace Linqpp
 {
     template <class Iterator1, class Iterator2>
-    class ConcatIterator
+    class ConcatIterator : public IteratorAdapter<ConcatIterator<Iterator1, Iterator2>>
     {
         using value_type1 = typename std::iterator_traits<Iterator1>::value_type;
         using value_type2 = typename std::iterator_traits<Iterator2>::value_type;
@@ -43,38 +43,23 @@ namespace Linqpp
 
         ConcatIterator() = default;
         ConcatIterator(ConcatIterator const&) = default;
+        ConcatIterator(ConcatIterator&&) = default;
         ConcatIterator& operator=(ConcatIterator const&) = default;
+        ConcatIterator& operator=(ConcatIterator&&) = default;
 
-    // InputIterator
+    // IteratorAdapter
     public:
-        bool operator==(ConcatIterator other) const { return _current1 == other._current1 && _current2 == other._current2; }
-        bool operator!=(ConcatIterator other) const { return !(*this == other); }
-        decltype(auto) operator*() { return (_current1 != _last1) ? *_current1 : *_current2; }
-        decltype(auto) operator*() const { return (_current1 != _last1) ? *_current1 : *_current2; }
-        decltype(auto) operator->() { return std::addressof(**this); }
-        decltype(auto) operator->() const { return std::addressof(**this); }
-        ConcatIterator& operator++() { if (_current1 != _last1) ++_current1; else ++_current2; return *this; }
-        ConcatIterator operator++(int) { auto copy = *this; ++*this; return copy; }
+        bool Equals(ConcatIterator const& other) const { return _current1 == other._current1 && _current2 == other._current2; }
+        decltype(auto) Get() { return (_current1 != _last1) ? *_current1 : *_current2; }
+        decltype(auto) Get() const { return (_current1 != _last1) ? *_current1 : *_current2; }
+        void Increment() { if (_current1 != _last1) ++_current1; else ++_current2; }
+        void Decrement() { if (_current2 == _first2) --_current1; else --_current2; }
 
-    // BidirectionalIterator
-    public:
-        ConcatIterator& operator--() { if (_current2 == _first2) --_current1; else --_current2; return *this; }
-        ConcatIterator operator--(int) { auto copy = *this; --*this; return copy; }
+        difference_type Difference(ConcatIterator const& other) const 
+        { 
+            return (_current1 - other._current1) + (_current2 - other._current2);
+        }
 
-    // RandomAccessIterator
-    public:
-        ConcatIterator& operator+=(difference_type n) { Move(n); return *this; }
-        ConcatIterator& operator-=(difference_type n) { Move(-n); return *this; }
-        difference_type operator-(ConcatIterator other) const { return (_current1 - other._current1) + (_current2 - other._current2); }
-        decltype(auto) operator[](difference_type n) { return *(*this + n); }
-        decltype(auto) operator[](difference_type n) const { return *(*this + n); }
-        bool operator<(ConcatIterator other) const { return (*this - other) < 0; }
-        bool operator<=(ConcatIterator other) const { return (*this - other) <= 0; }
-        bool operator>(ConcatIterator other) const { return (*this - other) > 0; }
-        bool operator>=(ConcatIterator other) const { return (*this - other) >= 0; }
-
-    // Internal
-    private:
         void Move(difference_type n)
         {
             if (n > 0)
@@ -105,15 +90,6 @@ namespace Linqpp
             }
         }
     };
-
-    template <class Iterator1, class Iterator2>
-    auto operator+(ConcatIterator<Iterator1, Iterator2> iter, typename ConcatIterator<Iterator1, Iterator2>::difference_type n) { return iter += n; }
-
-    template <class Iterator1, class Iterator2>
-    auto operator+(typename ConcatIterator<Iterator1, Iterator2>::difference_type n, ConcatIterator<Iterator1, Iterator2> iter) { return iter += n; }
-
-    template <class Iterator1, class Iterator2>
-    auto operator-(ConcatIterator<Iterator1, Iterator2> iter, typename ConcatIterator<Iterator1, Iterator2>::difference_type n) { return iter -= n; }
 
     template <class Iterator1, class Iterator2>
     auto CreateConcatIterator(Iterator1 current1, Iterator1 last1, Iterator2 first2, Iterator2 current2)

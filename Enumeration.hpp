@@ -78,6 +78,11 @@ namespace Linqpp
 		auto ToVector() const { return std::vector<value_type>(_first, _last); }
 
         template <class Predicate>
-        auto Where(Predicate predicate) const { return From(CreateWhereIterator(_first, _last, predicate), CreateWhereIterator(_last, _last, predicate)); }
+        auto Where(Predicate predicate) const
+        {
+            auto first = CreateWhereIterator(_first, _last, predicate);
+            auto last = CreateWhereIterator(_last, _last, predicate);
+            return From(first, last);
+        }
 	};
 }

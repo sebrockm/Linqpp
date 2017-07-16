@@ -1,11 +1,11 @@
 #pragma once
 
-#include <iterator>
+#include "IteratorAdapter.hpp"
 
 namespace Linqpp
 {
     template <class Iterator, class Function>
-    class SelectIterator
+    class SelectIterator : public IteratorAdapter<SelectIterator<Iterator, Function>>
     {
     // Fields
     private:
@@ -38,52 +38,17 @@ namespace Linqpp
         SelectIterator& operator=(SelectIterator const&) = default;
         SelectIterator& operator=(SelectIterator&&) = default;
 
-    // InputIterator
+    // IteratorAdapter
     public:
-        bool operator==(SelectIterator other) const { return _iterator == other._iterator; }
-        bool operator!=(SelectIterator other) const { return !(*this == other); }
-        decltype(auto) operator*() { return _function(*_iterator); }
-        decltype(auto) operator*() const { return _function(*_iterator); }
-        decltype(auto) operator->() { return pointer(**this); }
-        decltype(auto) operator->() const { return pointer(**this); }
-        SelectIterator& operator++() { ++_iterator; return *this; }
-        SelectIterator operator++(int) { auto copy = *this; ++*this; return copy; }
-
-    // BidirectionalIterator
-    public:
-        SelectIterator& operator--() { --_iterator; return *this; }
-        SelectIterator operator--(int) { auto copy = *this; --*this; return copy; }
-
-    // RandomAccessIterator
-    public:
-        SelectIterator& operator+=(difference_type n) { _iterator += n; return *this; }
-        SelectIterator& operator-=(difference_type n) { _iterator -= n; return *this; }
-        difference_type operator-(SelectIterator other) const { return _iterator - other._iterator; }
-        decltype(auto) operator[](difference_type n) { return *(*this + n); }
-        decltype(auto) operator[](difference_type n) const { return *(*this + n); }
-        bool operator<(SelectIterator other) const { return (*this - other) < 0; }
-        bool operator<=(SelectIterator other) const { return (*this - other) <= 0; }
-        bool operator>(SelectIterator other) const { return (*this - other) > 0; }
-        bool operator>=(SelectIterator other) const { return (*this - other) >= 0; }
+        bool Equals(SelectIterator const& other) const { return _iterator == other._iterator; }
+        decltype(auto) Get() { return _function(*_iterator); }
+        decltype(auto) Get() const { return _function(*_iterator); }
+        decltype(auto) operator->() { return pointer(Get()); }
+        decltype(auto) operator->() const { return pointer(Get()); }
+        void Increment() { ++_iterator; }
+        void Decrement() { --_iterator; }
+        difference_type Difference(SelectIterator const& other) const { return _iterator - other._iterator; }
     };
-
-    template <class Iterator, class Function>
-    auto operator+(SelectIterator<Iterator, Function> iterator, typename std::iterator_traits<decltype(iterator)>::difference_type n)
-    {
-        return iterator += n;
-    }
-
-    template <class Iterator, class Function>
-    auto operator+(typename std::iterator_traits<SelectIterator<Iterator, Function>>::difference_type n, SelectIterator<Iterator, Function> iterator)
-    {
-        return iterator += n;
-    }
-
-    template <class Iterator, class Function>
-    auto operator-(SelectIterator<Iterator, Function> iterator, typename std::iterator_traits<decltype(iterator)>::difference_type n)
-    {
-        return iterator -= n;
-    }
 
     template <class Iterator, class Function>
     auto CreateSelectIterator(Iterator iterator, Function function)
