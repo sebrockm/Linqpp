@@ -30,7 +30,7 @@ namespace Linqpp
             size_t _position;
 
         public:
-            using iterator_category = std::conditional_t<std::is_base_of<Category, std::bidirectional_iterator_tag>::value, 
+            using iterator_category = std::conditional_t<std::is_base_of<std::bidirectional_iterator_tag, Category>::value, 
                 std::forward_iterator_tag, Category>;
             using value_type = typename std::iterator_traits<Iterator>::value_type;
             using difference_type = typename std::iterator_traits<Iterator>::difference_type;

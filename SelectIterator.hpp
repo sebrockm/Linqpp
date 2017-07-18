@@ -1,6 +1,9 @@
 #pragma once
 
 #include "IteratorAdapter.hpp"
+#include "DummyPointer.hpp"
+
+using namespace Linqpp::Detail;
 
 namespace Linqpp
 {
@@ -16,15 +19,8 @@ namespace Linqpp
         using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
         using difference_type = typename std::iterator_traits<Iterator>::difference_type;
         using value_type = decltype(_function(*_iterator));
-        using reference = value_type&;
-        class pointer
-        {
-            value_type _value;
-        public:
-            explicit pointer(value_type const& value) : _value(value) { }
-            auto operator->() const { return std::addressof(_value); }
-            auto operator->() { return std::addressof(_value); }
-        };
+        using reference = value_type;
+        using pointer = DummyPointer<value_type>;
 
     // Constructors, destructor
     public:
@@ -41,10 +37,10 @@ namespace Linqpp
     // IteratorAdapter
     public:
         bool Equals(SelectIterator const& other) const { return _iterator == other._iterator; }
-        decltype(auto) Get() { return _function(*_iterator); }
-        decltype(auto) Get() const { return _function(*_iterator); }
-        decltype(auto) operator->() { return pointer(Get()); }
-        decltype(auto) operator->() const { return pointer(Get()); }
+        reference Get() { return _function(*_iterator); }
+        reference Get() const { return _function(*_iterator); }
+        pointer operator->() { return CreateDummyPointer(Get()); }
+        pointer operator->() const { return CreateDummyPointer(Get()); }
         void Increment() { ++_iterator; }
         void Decrement() { --_iterator; }
         difference_type Difference(SelectIterator const& other) const { return _iterator - other._iterator; }

@@ -61,5 +61,10 @@ int main()
         std:: cout << i << " ";
     std::cout << std::endl;
 
+	auto s = From(v).Take(4).Zip(l, [](auto i, auto j) { return std::make_pair(i, j); });
+
+	for (auto it = s.begin(); it != s.end(); ++it)
+		std::cout << it->first << "," << it->second << "\n";
+
     std::cout << "All tests passed" << std::endl;
 }

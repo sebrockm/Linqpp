@@ -5,6 +5,7 @@
 #include "SkipIterator.hpp"
 #include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
+#include "ZipIterator.hpp"
 
 #include <iterator>
 #include <algorithm>
@@ -67,8 +68,8 @@ namespace Linqpp
 
 		size_t Count() const { return std::distance(_first, _last); }
 
-        template <class Function>
-        auto Select(Function function) const { return From(CreateSelectIterator(_first, function), CreateSelectIterator(_last, function)); }
+        template <class UnaryFunction>
+        auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
 
 		auto Skip(size_t n) const { return From(Linqpp::Skip(_first, n, _last), _last); }
 
@@ -83,5 +84,14 @@ namespace Linqpp
             auto last = CreateWhereIterator(_last, _last, predicate);
             return From(first, last);
         }
+
+		template <class Container, class BinaryFunction>
+		auto Zip(Container&& container, BinaryFunction binaryFunction)
+		{
+            auto cBegin = std::begin(std::forward<Container>(container));
+            auto cEnd = std::end(std::forward<Container>(container));
+
+			return From(CreateZipIterator(_first, cBegin, binaryFunction), CreateZipIterator(_last, cEnd, binaryFunction));
+		}
 	};
 }
