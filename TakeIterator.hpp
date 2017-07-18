@@ -52,7 +52,6 @@ namespace Linqpp
             }
 
             reference Get() const { return *_first; }
-            reference Get() { return *_first; }
             void Increment() { ++_first; ++_position; }
         };
 

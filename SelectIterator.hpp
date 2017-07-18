@@ -37,9 +37,7 @@ namespace Linqpp
     // IteratorAdapter
     public:
         bool Equals(SelectIterator const& other) const { return _iterator == other._iterator; }
-        reference Get() { return _function(*_iterator); }
         reference Get() const { return _function(*_iterator); }
-        pointer operator->() { return CreateDummyPointer(Get()); }
         pointer operator->() const { return CreateDummyPointer(Get()); }
         void Increment() { ++_iterator; }
         void Decrement() { --_iterator; }

@@ -49,9 +49,7 @@ namespace Linqpp
     // IteratorAdapter
     public:
         bool Equals(ZipIterator const& other) const { return _iterator1 == other._iterator1 && _iterator2 == other._iterator2; }
-        reference Get() { return _function(*_iterator1, *_iterator2); }
         reference Get() const { return _function(*_iterator1, *_iterator2); }
-		pointer operator->() { return CreateDummyPointer(Get()); }
 		pointer operator->() const { return CreateDummyPointer(Get()); }
         void Increment() { ++_iterator1; ++_iterator2; }
         void Decrement() { --_iterator1; --_iterator2; }

@@ -50,8 +50,7 @@ namespace Linqpp
     // IteratorAdapter
     public:
         bool Equals(ConcatIterator const& other) const { return _current1 == other._current1 && _current2 == other._current2; }
-        decltype(auto) Get() { return (_current1 != _last1) ? *_current1 : *_current2; }
-        decltype(auto) Get() const { return (_current1 != _last1) ? *_current1 : *_current2; }
+        reference Get() const { return (_current1 != _last1) ? *_current1 : *_current2; }
         void Increment() { if (_current1 != _last1) ++_current1; else ++_current2; }
         void Decrement() { if (_current2 == _first2) --_current1; else --_current2; }
 

@@ -27,25 +27,27 @@ namespace Linqpp
 	   Yielder(Yielder const&) = delete;
 	   Yielder& operator=(Yielder const&) = delete;
 
-	   class Iterator : public std::iterator<std::input_iterator_tag, T>, public IteratorAdapter<Iterator>
+	   class Iterator : public IteratorAdapter<Iterator>
 	   {
 	   private:
 		  std::shared_ptr<Yielder> _spYielder;
 		  bool _isEnd;
 
 	   public:
+		  using iterator_category = std::input_iterator_tag;
+		  using value_type = T;
+		  using difference_type = std::ptrdiff_t;
+		  using reference = std::add_lvalue_reference_t<T>;
+		  using pointer = std::add_pointer_t<T>;
+
+	   public:
 		  Iterator() : _isEnd(true) { };
 		  Iterator(std::shared_ptr<Yielder> const& spYielder) : _spYielder(spYielder), _isEnd(false) { Increment(); }
 
+	   public:
           bool Equals(Iterator const& other) const { return _isEnd == other._isEnd; }
 
-		  decltype(auto) Get()
-		  {
-			 std::unique_lock<std::mutex> lock(_spYielder->_mutex);
-			 return _spYielder->_buffer.front();
-		  }
-		  
-		  decltype(auto) Get() const
+		  reference Get() const
 		  {
 			 std::unique_lock<std::mutex> lock(_spYielder->_mutex);
 			 return _spYielder->_buffer.front();

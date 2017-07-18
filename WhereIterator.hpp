@@ -37,8 +37,7 @@ namespace Linqpp
     // IteratorAdapter
     public:
         bool Equals(WhereIterator const& other) const { return _first == other._first; }
-        decltype(auto) Get() { return *_first; }
-        decltype(auto) Get() const { return *_first; }
+        reference Get() const { return *_first; }
         void Increment() { ++_first; AdvanceUntilFit(); }
         void Decrement() { --_first; DecreaseUntilFit(); }
 

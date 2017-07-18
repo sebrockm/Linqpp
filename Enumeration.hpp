@@ -86,7 +86,7 @@ namespace Linqpp
         }
 
 		template <class Container, class BinaryFunction>
-		auto Zip(Container&& container, BinaryFunction binaryFunction)
+		auto Zip(Container&& container, BinaryFunction binaryFunction) const
 		{
             auto cBegin = std::begin(std::forward<Container>(container));
             auto cEnd = std::end(std::forward<Container>(container));
