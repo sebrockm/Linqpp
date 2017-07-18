@@ -33,11 +33,17 @@ int main()
     if (From(v).Skip(3).Take(1).Count() != 1)
         throw 4;
 
+	if (From(v).Skip(6).Any())
+		throw 5;
+
+	if (From(v).Take(10).Count() != v.size())
+		throw 6;
+
     std::list<int> l = {6,7,8,9};
     int j = 1;
     for (auto i : From(v).Concat(l))
         if (i != j++)
-            throw 5;
+            throw 7;
 
 	for (auto i : testYield().Concat(v))
 		std::cout << i << " ";

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "ConcatIterator.hpp"
-#include "TakeIterator.hpp"
 #include "SelectIterator.hpp"
+#include "SkipIterator.hpp"
+#include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
 
 #include <iterator>
@@ -38,9 +39,7 @@ namespace Linqpp
 		using value_type = typename std::iterator_traits<Iterator>::value_type;
 
 	public:
-		Enumeration(Iterator first, Iterator last)
-			: _first(first), _last(last)
-		{ }
+		Enumeration(Iterator first, Iterator last) : _first(first), _last(last) { }
 
 	public:
 		auto begin() const { return _first; }
@@ -71,7 +70,7 @@ namespace Linqpp
         template <class Function>
         auto Select(Function function) const { return From(CreateSelectIterator(_first, function), CreateSelectIterator(_last, function)); }
 
-		auto Skip(size_t n) const { return From(std::next(_first, n), _last); }
+		auto Skip(size_t n) const { return From(Linqpp::Skip(_first, n, _last), _last); }
 
 		auto Take(size_t n) const { return GetEnumeratorFromTake(_first, n, _last); }
 
