@@ -68,6 +68,9 @@ namespace Linqpp
 
 		size_t Count() const { return std::distance(_first, _last); }
 
+		decltype(auto) First() const { return *_first; }
+		value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
+
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
 

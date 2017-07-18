@@ -66,5 +66,7 @@ int main()
 	for (auto it = s.begin(); it != s.end(); ++it)
 		std::cout << it->first << "," << it->second << "\n";
 
+	std::cout << From(v).First() << " " << From(v).Skip(23).FirstOrDefault() << std::endl;
+
     std::cout << "All tests passed" << std::endl;
 }
