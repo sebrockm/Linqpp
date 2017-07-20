@@ -18,11 +18,6 @@ namespace Linqpp
         using iterator_category1 = typename std::iterator_traits<Iterator1>::iterator_category;
         using iterator_category2 = typename std::iterator_traits<Iterator2>::iterator_category;
 
-        static_assert(std::is_same<value_type1, value_type2>::value, "Iterators must have the same value_type.");
-        static_assert(std::is_same<difference_type1, difference_type2>::value, "Iterators must have the same difference_type.");
-        static_assert(std::is_same<reference1, reference2>::value, "Iterators must have the same reference.");
-        static_assert(std::is_same<pointer1, pointer2>::value, "Iterators must have the same pointer.");
-
     private:
         Iterator1 _last1;
         Iterator2 _first2;
@@ -31,10 +26,10 @@ namespace Linqpp
 
     public:
         using iterator_category = std::common_type_t<iterator_category1, iterator_category2>;
-        using value_type = value_type1;
-        using difference_type = difference_type1;
-        using reference = reference1;
-        using pointer = pointer1;
+        using value_type = std::common_type_t<value_type1, value_type2>;
+        using difference_type = std::common_type_t<difference_type1, difference_type2>;
+        using reference = std::common_type_t<reference1, reference2>;
+        using pointer = std::common_type_t<pointer1, pointer2>;
 
     public:
         ConcatIterator(Iterator1 current1, Iterator1 last1, Iterator2 first2, Iterator2 current2)

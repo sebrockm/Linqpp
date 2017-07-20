@@ -14,6 +14,7 @@ namespace Linqpp
 			explicit DummyPointer(T&& value) : _value(std::move(value)) { }
 
 			auto operator->() const { return std::addressof(_value); }
+			operator T*() const { return std::addressof(_value); }
 		};
 
 		template <class T>

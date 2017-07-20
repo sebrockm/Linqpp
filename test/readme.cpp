@@ -1,14 +1,4 @@
-# Linqpp (LINQ for C++)
 
-.NET devolopers are used to LINQ these days as it is very handy when working with enumerations. 
-Since nothing comparable is available in standard C++, Linqpp tries to emulate the LINQ extension methods.
-
-Linqpp is a header only library that has no other dependencies than STL (C++14).
-
-
-## Getting started
-
-```C++
 #include "Enumeration.hpp" // the core of Linqpp that provides all functionality
 #include <vector>
 #include <iostream>
@@ -46,5 +36,3 @@ int main()
     for (auto p : example.Zip(l, [](auto d, auto i) { return d * i; }).Take(2))
         std::cout << p << " "; // 6.14 16.28
 }
-
-```
