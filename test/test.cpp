@@ -2,6 +2,8 @@
 #include "Yield.hpp"
 
 #include <iostream>
+#include <vector>
+#include <list>
 
 using namespace Linqpp;
 
@@ -67,6 +69,8 @@ int main()
 		std::cout << it->first << "," << it->second << "\n";
 
 	std::cout << From(v).First() << " " << From(v).Skip(23).FirstOrDefault() << std::endl;
+	std::cout << From(v).Last() << " " << From(v).Skip(23).LastOrDefault() << std::endl;
+	std::cout << testYield().Last() << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 }

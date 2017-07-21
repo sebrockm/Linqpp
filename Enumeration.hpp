@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConcatIterator.hpp"
+#include "Last.hpp"
 #include "SelectIterator.hpp"
 #include "Skip.hpp"
 #include "TakeIterator.hpp"
@@ -10,7 +11,6 @@
 #include <iterator>
 #include <algorithm>
 #include <vector>
-#include <list>
 
 namespace Linqpp
 {
@@ -71,7 +71,7 @@ namespace Linqpp
 		decltype(auto) First() const { return *_first; }
 		value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
 
-		decltype(auto) Last() const { auto copy = _last; return *--copy; }
+		decltype(auto) Last() const { return Linqpp::Last(_first, _last); }
 		value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
 
         template <class UnaryFunction>

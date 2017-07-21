@@ -11,6 +11,7 @@ Linqpp is a header only library that has no other dependencies than STL (C++14).
 ```C++
 #include "Enumeration.hpp" // the core of Linqpp that provides all functionality
 #include <vector>
+#include <list>
 #include <iostream>
 
 using namespace Linqpp;
