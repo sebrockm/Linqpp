@@ -2,7 +2,7 @@
 
 #include "ConcatIterator.hpp"
 #include "SelectIterator.hpp"
-#include "SkipIterator.hpp"
+#include "Skip.hpp"
 #include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
@@ -70,6 +70,9 @@ namespace Linqpp
 
 		decltype(auto) First() const { return *_first; }
 		value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
+
+		decltype(auto) Last() const { auto copy = _last; return *--copy; }
+		value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
 
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
