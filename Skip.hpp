@@ -17,9 +17,9 @@ namespace Linqpp
         template <class Iterator, class Category>
         auto InternalSkip(Iterator first, size_t n, Iterator last, Category)
         {
-			for (size_t i = 0; i < n && first != last; ++i, ++first);
-			
-			return first;
+            for (size_t i = 0; i < n && first != last; ++i, ++first);
+            
+            return first;
         }
     }
 

@@ -26,18 +26,18 @@ namespace Linqpp
     private:
         Iterator1 _iterator1;
         Iterator2 _iterator2;
-		Function _function;
+        Function _function;
 
     public:
         using iterator_category = std::common_type_t<iterator_category1, iterator_category2>;
         using value_type = decltype(_function(*_iterator1, *_iterator2));
         using difference_type = difference_type1;
         using reference = value_type;
-		using pointer = DummyPointer<value_type>;
+        using pointer = DummyPointer<value_type>;
 
     public:
         ZipIterator(Iterator1 iterator1, Iterator2 iterator2, Function function)
-			: _iterator1(iterator1), _iterator2(iterator2), _function(function)
+            : _iterator1(iterator1), _iterator2(iterator2), _function(function)
         { }
 
         ZipIterator() = default;
@@ -50,7 +50,7 @@ namespace Linqpp
     public:
         bool Equals(ZipIterator const& other) const { return _iterator1 == other._iterator1 && _iterator2 == other._iterator2; }
         reference Get() const { return _function(*_iterator1, *_iterator2); }
-		pointer operator->() const { return CreateDummyPointer(Get()); }
+        pointer operator->() const { return CreateDummyPointer(Get()); }
         void Increment() { ++_iterator1; ++_iterator2; }
         void Decrement() { --_iterator1; --_iterator2; }
         difference_type Difference(ZipIterator const& other) const { return _iterator1 - other._iterator1; }
