@@ -8,8 +8,9 @@
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
 
-#include <iterator>
 #include <algorithm>
+#include <iterator>
+#include <numeric>
 #include <vector>
 
 namespace Linqpp
@@ -47,6 +48,12 @@ namespace Linqpp
         auto end() const { return _last; }
 
     public:
+        template <class Seed, class BinaryFunction>
+        auto Aggregate(Seed const& seed, BinaryFunction binaryFunction) const { return std::accumulate(_first, _last, seed, binaryFunction); }
+
+        template <class BinaryFunction>
+        auto Aggregate(BinaryFunction binaryFunction) const { return Aggregate(First(), binaryFunction); }
+
         bool Any() const { return _first != _last; }
 
         template <class Predicate> 
