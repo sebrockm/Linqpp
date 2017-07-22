@@ -73,6 +73,12 @@ namespace Linqpp
             return From(first, last);
         }
 
+        template <class T, class CompareFunction>
+        auto Contains(T const& t, CompareFunction compareFunction) const { return Any([=](const auto& t2) { return compareFunction(t, t2); }); }
+
+        template <class T>
+        auto Contains(T const& t) const { return Contains(t, std::equal_to<>()); }
+
         size_t Count() const { return std::distance(_first, _last); }
 
         decltype(auto) First() const { return *_first; }
