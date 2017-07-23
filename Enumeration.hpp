@@ -104,6 +104,16 @@ namespace Linqpp
         template <class Predicate>
         value_type LastOrDefault(Predicate predicate) const { auto found = Linqpp::Last(_first, _last, predicate); return found != _last ? *found : value_type(); }
 
+        decltype(auto) Max() const { return *std::max_element(_first, _last); }
+
+        template <class UnaryFunction>
+        decltype(auto) Max(UnaryFunction unaryFunction) const { return Select(unaryFunction).Max(); }
+
+        decltype(auto) Min() const { return *std::min_element(_first, _last); }
+
+        template <class UnaryFunction>
+        decltype(auto) Min(UnaryFunction unaryFunction) const { return Select(unaryFunction).Min(); }
+
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
 
