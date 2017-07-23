@@ -60,7 +60,11 @@ int main()
     std::cout << std::endl;
 
     for (auto i : From(v).Where([](auto i) { return i % 2 == 0; }))
-        std:: cout << i << " ";
+        std::cout << i << " ";
+    std::cout << std::endl;
+
+    for (auto i : From(l).Reverse())
+        std::cout << i << " ";
     std::cout << std::endl;
 
     auto s = From(v).Take(4).Zip(l, [](auto i, auto j) { return std::make_pair(i, j); });

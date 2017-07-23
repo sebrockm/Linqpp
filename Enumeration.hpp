@@ -115,6 +115,8 @@ namespace Linqpp
         template <class UnaryFunction>
         decltype(auto) Min(UnaryFunction unaryFunction) const { return Select(unaryFunction).Min(); }
 
+        auto Reverse() const { return From(std::make_reverse_iterator(_last), std::make_reverse_iterator(_first)); }
+
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
 
