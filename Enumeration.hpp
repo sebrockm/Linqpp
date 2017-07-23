@@ -81,6 +81,9 @@ namespace Linqpp
 
         size_t Count() const { return std::distance(_first, _last); }
 
+        template <class Predicate>
+        size_t Count(Predicate predicate) const { return std::count_if(_first, _last, predicate); }
+
         decltype(auto) First() const { return *_first; }
         value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
 
