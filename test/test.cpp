@@ -70,7 +70,7 @@ int main()
 
     std::cout << From(v).First() << " " << From(v).Skip(23).FirstOrDefault() << std::endl;
     std::cout << From(v).Last() << " " << From(v).Skip(23).LastOrDefault() << std::endl;
-    std::cout << testYield().Last() << std::endl;
+    //std::cout << testYield().Last() << std::endl;
     std::cout << From(l).Contains(7) << std::endl;
 
     std::cout << "All tests passed" << std::endl;

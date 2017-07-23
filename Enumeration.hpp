@@ -85,10 +85,24 @@ namespace Linqpp
         size_t Count(Predicate predicate) const { return std::count_if(_first, _last, predicate); }
 
         decltype(auto) First() const { return *_first; }
+
+        template <class Predicate>
+        decltype(auto) First(Predicate predicate) const { return *std::find_if(_first, _last, predicate); }
+
         value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
 
-        decltype(auto) Last() const { return Linqpp::Last(_first, _last); }
+        template <class Predicate>
+        value_type FirstOrDefault(Predicate predicate) const { auto found = std::find_if(_first, _last, predicate); return found != _last ? *found : value_type(); }
+
+        decltype(auto) Last() const { return *Linqpp::Last(_first, _last); }
+
+        template <class Predicate>
+        decltype(auto) Last(Predicate predicate) const { return *Linqpp::Last(_first, _last, predicate); }
+
         value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
+
+        template <class Predicate>
+        value_type LastOrDefault(Predicate predicate) const { auto found = Linqpp::Last(_first, _last, predicate); return found != _last ? *found : value_type(); }
 
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
