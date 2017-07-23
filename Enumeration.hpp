@@ -2,6 +2,7 @@
 
 #include "ConcatIterator.hpp"
 #include "Last.hpp"
+#include "MinMax.hpp"
 #include "SelectIterator.hpp"
 #include "Skip.hpp"
 #include "TakeIterator.hpp"
@@ -104,12 +105,12 @@ namespace Linqpp
         template <class Predicate>
         value_type LastOrDefault(Predicate predicate) const { auto found = Linqpp::Last(_first, _last, predicate); return found != _last ? *found : value_type(); }
 
-        decltype(auto) Max() const { return *std::max_element(_first, _last); }
+        decltype(auto) Max() const { return Linqpp::Max(_first, _last); }
 
         template <class UnaryFunction>
         decltype(auto) Max(UnaryFunction unaryFunction) const { return Select(unaryFunction).Max(); }
 
-        decltype(auto) Min() const { return *std::min_element(_first, _last); }
+        decltype(auto) Min() const { return Linqpp::Min(_first, _last); }
 
         template <class UnaryFunction>
         decltype(auto) Min(UnaryFunction unaryFunction) const { return Select(unaryFunction).Min(); }
