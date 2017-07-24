@@ -78,6 +78,7 @@ int main()
     std::cout << From(l).Contains(7) << std::endl;
     std::cout << From(l).Min() << " " << From(l).Max() << std::endl;
     std::cout << From(l).Min(std::negate<>()) << " " << From(l).Max(std::negate<>()) << std::endl;
+    std::cout << From(l).Aggregate(std::plus<>()) << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 }

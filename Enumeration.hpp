@@ -53,7 +53,7 @@ namespace Linqpp
         auto Aggregate(Seed const& seed, BinaryFunction binaryFunction) const { return std::accumulate(_first, _last, seed, binaryFunction); }
 
         template <class BinaryFunction>
-        auto Aggregate(BinaryFunction binaryFunction) const { return Aggregate(First(), binaryFunction); }
+        auto Aggregate(BinaryFunction binaryFunction) const { decltype(auto) first = First(); return std::accumulate(std::next(_first), _last, first, binaryFunction); }
 
         bool Any() const { return _first != _last; }
 
