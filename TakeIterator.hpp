@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enumeration.hpp"
+#include "Enumerable.hpp"
 #include "IteratorAdapter.hpp"
 
 #include <algorithm>
@@ -8,7 +8,7 @@
 namespace Linqpp
 {
     template <class Iterator>
-    class Enumeration;
+    class Enumerable;
 
     template <class Iterator>
     auto From(Iterator first, Iterator last);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enumeration.hpp"
+#include "Enumerable.hpp"
 #include "IteratorAdapter.hpp"
 
 #include <memory>

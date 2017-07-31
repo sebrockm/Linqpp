@@ -17,12 +17,12 @@
 namespace Linqpp
 {
     template <class Iterator>
-    class Enumeration;
+    class Enumerable;
 
     template <class Iterator>
     auto From(Iterator first, Iterator last)
     {
-        return Enumeration<Iterator>(first, last);
+        return Enumerable<Iterator>(first, last);
     }
 
     template <class Container>
@@ -32,7 +32,7 @@ namespace Linqpp
     }
 
     template <class Iterator>
-    class Enumeration
+    class Enumerable
     {
     private:
         Iterator _first;
@@ -42,7 +42,7 @@ namespace Linqpp
         using value_type = typename std::iterator_traits<Iterator>::value_type;
 
     public:
-        Enumeration(Iterator first, Iterator last) : _first(first), _last(last) { }
+        Enumerable(Iterator first, Iterator last) : _first(first), _last(last) { }
 
     public:
         auto begin() const { return _first; }
