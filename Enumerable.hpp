@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConcatIterator.hpp"
+#include "IntIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
 #include "SelectIterator.hpp"
@@ -17,12 +18,12 @@
 namespace Linqpp
 {
     template <class Iterator>
-    class Enumerable;
+    class Enumeration;
 
     template <class Iterator>
     auto From(Iterator first, Iterator last)
     {
-        return Enumerable<Iterator>(first, last);
+        return Enumeration<Iterator>(first, last);
     }
 
     template <class Container>
@@ -32,7 +33,7 @@ namespace Linqpp
     }
 
     template <class Iterator>
-    class Enumerable
+    class Enumeration
     {
     private:
         Iterator _first;
@@ -42,7 +43,7 @@ namespace Linqpp
         using value_type = typename std::iterator_traits<Iterator>::value_type;
 
     public:
-        Enumerable(Iterator first, Iterator last) : _first(first), _last(last) { }
+        Enumeration(Iterator first, Iterator last) : _first(first), _last(last) { }
 
     public:
         auto begin() const { return _first; }
@@ -141,6 +142,15 @@ namespace Linqpp
             auto cEnd = std::end(std::forward<Container>(container));
 
             return From(CreateZipIterator(_first, cBegin, binaryFunction), CreateZipIterator(_last, cEnd, binaryFunction));
+        }
+    };
+
+    struct Enumerable
+    {
+        template <class Int>
+        static auto Range(Int start, Int count)
+        {
+            return From(CreateIntIterator(start), CreateIntIterator(start + count));
         }
     };
 }

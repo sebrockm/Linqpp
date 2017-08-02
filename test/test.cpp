@@ -79,6 +79,7 @@ int main()
     std::cout << From(l).Min() << " " << From(l).Max() << std::endl;
     std::cout << From(l).Min(std::negate<>()) << " " << From(l).Max(std::negate<>()) << std::endl;
     std::cout << From(l).Aggregate(std::plus<>()) << std::endl;
+    std::cout << Enumerable::Range(1, 10).Aggregate(std::string(""), [](auto s, auto j) { return s + ", " + std::to_string(j); }) << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 }

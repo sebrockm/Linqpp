@@ -8,7 +8,7 @@
 namespace Linqpp
 {
     template <class Iterator>
-    class Enumerable;
+    class Enumeration;
 
     template <class Iterator>
     auto From(Iterator first, Iterator last);
