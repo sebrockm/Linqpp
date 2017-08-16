@@ -1,9 +1,9 @@
-#include "Enumerable.hpp"
-#include "Yield.hpp"
-
 #include <iostream>
 #include <vector>
 #include <list>
+
+#include "Enumerable.hpp"
+#include "Yield.hpp"
 
 using namespace Linqpp;
 
@@ -80,6 +80,28 @@ int main()
     std::cout << From(l).Min(std::negate<>()) << " " << From(l).Max(std::negate<>()) << std::endl;
     std::cout << From(l).Aggregate(std::plus<>()) << std::endl;
     std::cout << Enumerable::Range(1, 10).Aggregate(std::string(""), [](auto s, auto j) { return s + ", " + std::to_string(j); }) << std::endl;
+
+    std::vector<int> u = { 1, 1, 2, 3, 3, 1, 2, 3, 4 };
+    std::cout << From(u).Distinct(std::less<>()).Count() << std::endl;
+    std::cout << From(u).Distinct().Count() << std::endl;
+
+    struct A
+    {
+        int a;
+        bool operator<(A a) const { return this->a < a.a; }
+    };
+
+    std::vector<A> va = { A{1}, A{3}, A{3}, A{1} };
+    std::cout << From(va).Distinct().Count() << std::endl;
+
+    struct B
+    {
+        int b;
+        bool operator==(B b) const { return this->b < b.b; }
+    };
+
+    std::vector<B> vb = { B{2}, B{4}, B{1}, B{2}, B{1} };
+    std::cout << From(vb).Distinct().Count() << std::endl;
 
     std::cout << "All tests passed" << std::endl;
 }

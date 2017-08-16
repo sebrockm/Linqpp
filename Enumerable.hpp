@@ -1,6 +1,15 @@
 #pragma once
 
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <numeric>
+#include <set>
+#include <unordered_set>
+#include <vector>
+
 #include "ConcatIterator.hpp"
+#include "Distinct.hpp"
 #include "IntIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
@@ -9,11 +18,6 @@
 #include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
-
-#include <algorithm>
-#include <iterator>
-#include <numeric>
-#include <vector>
 
 namespace Linqpp
 {
@@ -85,6 +89,14 @@ namespace Linqpp
 
         template <class Predicate>
         size_t Count(Predicate predicate) const { return std::count_if(_first, _last, predicate); }
+
+        auto Distinct() const { return Linqpp::Distinct(_first, _last); }
+
+        template <class LessThanComparer>
+        auto Distinct(LessThanComparer comparer) const { return Linqpp::Distinct(_first, _last, comparer); }
+
+        template <class EqualityComparer, class Hash>
+        auto Distinct(EqualityComparer comparer, Hash hash) const { return Linqpp::Distinct(_first, _last, comparer, hash); }
 
         decltype(auto) First() const { return *_first; }
 
