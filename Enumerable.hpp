@@ -56,26 +56,26 @@ namespace Linqpp
 
     public:
         template <class Seed, class BinaryFunction>
-        auto Aggregate(Seed const& seed, BinaryFunction binaryFunction) const { return std::accumulate(_first, _last, seed, binaryFunction); }
+        auto Aggregate(Seed const& seed, BinaryFunction binaryFunction) const { return std::accumulate(begin(), end(), seed, binaryFunction); }
 
         template <class BinaryFunction>
-        auto Aggregate(BinaryFunction binaryFunction) const { decltype(auto) first = First(); return std::accumulate(std::next(_first), _last, first, binaryFunction); }
+        auto Aggregate(BinaryFunction binaryFunction) const { decltype(auto) first = First(); return std::accumulate(std::next(begin()), end(), first, binaryFunction); }
 
-        bool Any() const { return _first != _last; }
-
-        template <class Predicate> 
-        bool Any(Predicate predicate) const { return std::any_of(_first, _last, predicate); }
+        bool Any() const { return begin() != end(); }
 
         template <class Predicate> 
-        bool All(Predicate predicate) const { return std::all_of(_first, _last, predicate); }
+        bool Any(Predicate predicate) const { return std::any_of(begin(), end(), predicate); }
+
+        template <class Predicate> 
+        bool All(Predicate predicate) const { return std::all_of(begin(), end(), predicate); }
 
         template <class Container>
         auto Concat(Container&& container) const
         {
             auto cBegin = std::begin(std::forward<Container>(container));
             auto cEnd = std::end(std::forward<Container>(container));
-            auto first = CreateConcatIterator(_first, _last, cBegin, cBegin);
-            auto last = CreateConcatIterator(_last, _last, cBegin, cEnd);
+            auto first = CreateConcatIterator(begin(), end(), cBegin, cBegin);
+            auto last = CreateConcatIterator(end(), end(), cBegin, cEnd);
 
             return From(first, last);
         }
@@ -86,69 +86,69 @@ namespace Linqpp
         template <class T>
         auto Contains(T const& t) const { return Contains(t, std::equal_to<>()); }
 
-        size_t Count() const { return std::distance(_first, _last); }
+        size_t Count() const { return std::distance(begin(), end()); }
 
         template <class Predicate>
-        size_t Count(Predicate predicate) const { return std::count_if(_first, _last, predicate); }
+        size_t Count(Predicate predicate) const { return std::count_if(begin(), end(), predicate); }
 
-        auto Distinct() const { return Linqpp::Distinct(_first, _last); }
+        auto Distinct() const { return Linqpp::Distinct(begin(), end()); }
 
         template <class LessThanComparer>
-        auto Distinct(LessThanComparer comparer) const { return Linqpp::Distinct(_first, _last, comparer); }
+        auto Distinct(LessThanComparer comparer) const { return Linqpp::Distinct(begin(), end(), comparer); }
 
         template <class EqualityComparer, class Hash>
-        auto Distinct(EqualityComparer comparer, Hash hash) const { return Linqpp::Distinct(_first, _last, comparer, hash); }
+        auto Distinct(EqualityComparer comparer, Hash hash) const { return Linqpp::Distinct(begin(), end(), comparer, hash); }
         
-        decltype(auto) ElementAt(size_t i) const { return Linqpp::ElementAt(_first, i, typename std::iterator_traits<Iterator>::iterator_category()); }
+        decltype(auto) ElementAt(size_t i) const { return Linqpp::ElementAt(begin(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
 
-        value_type ElementAtOrDefault(size_t i) const { return Linqpp::ElementAtOrDefault(_first, _last, i, typename std::iterator_traits<Iterator>::iterator_category()); }
+        value_type ElementAtOrDefault(size_t i) const { return Linqpp::ElementAtOrDefault(begin(), end(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
 
-        decltype(auto) First() const { return *_first; }
+        decltype(auto) First() const { return *begin(); }
 
         template <class Predicate>
-        decltype(auto) First(Predicate predicate) const { return *std::find_if(_first, _last, predicate); }
+        decltype(auto) First(Predicate predicate) const { return *std::find_if(begin(), end(), predicate); }
 
         value_type FirstOrDefault() const { return Any() ? First() : value_type(); }
 
         template <class Predicate>
-        value_type FirstOrDefault(Predicate predicate) const { auto found = std::find_if(_first, _last, predicate); return found != _last ? *found : value_type(); }
+        value_type FirstOrDefault(Predicate predicate) const { auto found = std::find_if(begin(), end(), predicate); return found != end() ? *found : value_type(); }
 
-        decltype(auto) Last() const { return *Linqpp::Last(_first, _last); }
+        decltype(auto) Last() const { return *Linqpp::Last(begin(), end()); }
 
         template <class Predicate>
-        decltype(auto) Last(Predicate predicate) const { return *Linqpp::Last(_first, _last, predicate); }
+        decltype(auto) Last(Predicate predicate) const { return *Linqpp::Last(begin(), end(), predicate); }
 
         value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
 
         template <class Predicate>
-        value_type LastOrDefault(Predicate predicate) const { auto found = Linqpp::Last(_first, _last, predicate); return found != _last ? *found : value_type(); }
+        value_type LastOrDefault(Predicate predicate) const { auto found = Linqpp::Last(begin(), end(), predicate); return found != end() ? *found : value_type(); }
 
-        decltype(auto) Max() const { return Linqpp::Max(_first, _last); }
+        decltype(auto) Max() const { return Linqpp::Max(begin(), end()); }
 
         template <class UnaryFunction>
         decltype(auto) Max(UnaryFunction unaryFunction) const { return Select(unaryFunction).Max(); }
 
-        decltype(auto) Min() const { return Linqpp::Min(_first, _last); }
+        decltype(auto) Min() const { return Linqpp::Min(begin(), end()); }
 
         template <class UnaryFunction>
         decltype(auto) Min(UnaryFunction unaryFunction) const { return Select(unaryFunction).Min(); }
 
-        auto Reverse() const { return From(std::make_reverse_iterator(_last), std::make_reverse_iterator(_first)); }
+        auto Reverse() const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
 
         template <class UnaryFunction>
-        auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(_first, unaryFunction), CreateSelectIterator(_last, unaryFunction)); }
+        auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction)); }
 
-        auto Skip(size_t n) const { return From(Linqpp::Skip(_first, n, _last), _last); }
+        auto Skip(size_t n) const { return From(Linqpp::Skip(begin(), n, end()), end()); }
 
-        auto Take(size_t n) const { return GetEnumeratorFromTake(_first, n, _last); }
+        auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
 
-        auto ToVector() const { return std::vector<value_type>(_first, _last); }
+        auto ToVector() const { return std::vector<value_type>(begin(), end()); }
 
         template <class Predicate>
         auto Where(Predicate predicate) const
         {
-            auto first = CreateWhereIterator(_first, _last, predicate);
-            auto last = CreateWhereIterator(_last, _last, predicate);
+            auto first = CreateWhereIterator(begin(), end(), predicate);
+            auto last = CreateWhereIterator(end(), end(), predicate);
             return From(first, last);
         }
 
@@ -158,7 +158,7 @@ namespace Linqpp
             auto cBegin = std::begin(std::forward<Container>(container));
             auto cEnd = std::end(std::forward<Container>(container));
 
-            return From(CreateZipIterator(_first, cBegin, binaryFunction), CreateZipIterator(_last, cEnd, binaryFunction));
+            return From(CreateZipIterator(begin(), cBegin, binaryFunction), CreateZipIterator(end(), cEnd, binaryFunction));
         }
     };
 
