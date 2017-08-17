@@ -47,6 +47,24 @@ int main()
         if (i != j++)
             throw 7;
 
+    if (From(v).ElementAt(3) != 4)
+        throw 8;
+
+    if (From(l).ElementAt(2) != 8)
+        throw 9;
+
+    if (From(v).ElementAtOrDefault(-1) != 0)
+        throw 10;
+
+    if (From(l).ElementAtOrDefault(10) != 0)
+        throw 11;
+
+    if (From(v).ElementAtOrDefault(3) != 4)
+        throw 12;
+
+    if (From(l).ElementAtOrDefault(2) != 8)
+        throw 13;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;

@@ -10,6 +10,7 @@
 
 #include "ConcatIterator.hpp"
 #include "Distinct.hpp"
+#include "ElementAt.hpp"
 #include "IntIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
@@ -97,6 +98,10 @@ namespace Linqpp
 
         template <class EqualityComparer, class Hash>
         auto Distinct(EqualityComparer comparer, Hash hash) const { return Linqpp::Distinct(_first, _last, comparer, hash); }
+        
+        decltype(auto) ElementAt(size_t i) const { return Linqpp::ElementAt(_first, i, typename std::iterator_traits<Iterator>::iterator_category()); }
+
+        value_type ElementAtOrDefault(size_t i) const { return Linqpp::ElementAtOrDefault(_first, _last, i, typename std::iterator_traits<Iterator>::iterator_category()); }
 
         decltype(auto) First() const { return *_first; }
 
