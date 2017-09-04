@@ -1,16 +1,9 @@
 #pragma once
 
-#include <algorithm>
-#include <iterator>
-#include <memory>
-#include <numeric>
-#include <set>
-#include <unordered_set>
-#include <vector>
-
 #include "ConcatIterator.hpp"
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
+#include "From.hpp"
 #include "IntIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
@@ -20,23 +13,16 @@
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <numeric>
+#include <set>
+#include <unordered_set>
+#include <vector>
+
 namespace Linqpp
 {
-    template <class Iterator>
-    class Enumeration;
-
-    template <class Iterator>
-    auto From(Iterator first, Iterator last)
-    {
-        return Enumeration<Iterator>(first, last);
-    }
-
-    template <class Container>
-    auto From(Container&& container)
-    {
-        return From(std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)));
-    }
-
     template <class Iterator>
     class Enumeration
     {

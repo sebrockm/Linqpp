@@ -1,18 +1,14 @@
+#include "From.hpp"
+#include "Enumerable.hpp"
+
 #include <algorithm>
+#include <memory>
 #include <set>
 #include <unordered_set>
 #include <vector>
 
-#include "Enumerable.hpp"
-
 namespace Linqpp
 {
-    template <class Iterator>
-    class Enumeration;
-
-    template <class Iterator>
-    auto From(Iterator, Iterator);
-
     template <class Iterator, class LessThanComparer>
     auto Distinct(Iterator first, Iterator last, LessThanComparer comparer)
     {

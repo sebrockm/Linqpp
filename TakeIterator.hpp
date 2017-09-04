@@ -1,18 +1,13 @@
 #pragma once
 
 #include "Enumerable.hpp"
+#include "From.hpp"
 #include "IteratorAdapter.hpp"
 
 #include <algorithm>
 
 namespace Linqpp
 {
-    template <class Iterator>
-    class Enumeration;
-
-    template <class Iterator>
-    auto From(Iterator first, Iterator last);
-
     namespace Detail
     {
         template <class Iterator>
