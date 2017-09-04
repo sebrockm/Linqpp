@@ -2,8 +2,7 @@
 #include <vector>
 #include <list>
 
-#include "Enumerable.hpp"
-#include "Yield.hpp"
+#include "Linqpp.hpp"
 
 using namespace Linqpp;
 

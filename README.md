@@ -9,7 +9,7 @@ Linqpp is a header only library that has no other dependencies than STL (C++14).
 ## Getting started
 
 ```C++
-#include "Enumeration.hpp" // the core of Linqpp that provides all functionality
+#include "Linqpp.hpp" // the core of Linqpp that provides all functionality
 #include <vector>
 #include <list>
 #include <iostream>
@@ -21,8 +21,8 @@ int main()
     std::vector<int> v = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     double a[] = { 11.1, 12.2 };
     
-    auto example = // frist, transfer v into a Linqpp enumeration using From()
-        From(v) // anything for which std::begin(v) and std::end(v) is valid code can be used
+    auto example = // first, transfer v into a Linqpp enumeration using From()
+        From(v) // whenever std::begin(v) and std::end(v) is valid code, From(v) is also valid
         .Skip(2) // will return empty enumeration (and NOT fail) if too many elements are skipped
         .Take(5) // similar here
         .Where([](auto i) { return i % 2 != 0; }) // C++ lambdas are not as concise as in C# but still OK
