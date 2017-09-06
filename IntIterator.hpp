@@ -39,6 +39,7 @@ namespace Linqpp
         void Increment() { ++_int; }
         void Decrement() { --_int; }
         difference_type Difference(IntIterator const& other) const { return _int - other._int; }
+        void Move(difference_type n) { _int += n; }
     };
 
     template <class Int>
