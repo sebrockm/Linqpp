@@ -9,6 +9,7 @@
 #include "MinMax.hpp"
 #include "SelectIterator.hpp"
 #include "Skip.hpp"
+#include "SortingIterator.hpp"
 #include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
@@ -85,9 +86,9 @@ namespace Linqpp
         template <class EqualityComparer, class Hash>
         auto Distinct(EqualityComparer comparer, Hash hash) const { return Linqpp::Distinct(begin(), end(), comparer, hash); }
         
-        decltype(auto) ElementAt(size_t i) const { return Linqpp::ElementAt(begin(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
+        decltype(auto) ElementAt(int64_t i) const { return Linqpp::ElementAt(begin(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
 
-        value_type ElementAtOrDefault(size_t i) const { return Linqpp::ElementAtOrDefault(begin(), end(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
+        value_type ElementAtOrDefault(int64_t i) const { return Linqpp::ElementAtOrDefault(begin(), end(), i, typename std::iterator_traits<Iterator>::iterator_category()); }
 
         decltype(auto) First() const { return *begin(); }
 
@@ -118,6 +119,21 @@ namespace Linqpp
 
         template <class UnaryFunction>
         decltype(auto) Min(UnaryFunction unaryFunction) const { return Select(unaryFunction).Min(); }
+
+        template <class UnaryFunction>
+        auto OrderBy(UnaryFunction unaryFunction) const { return OrderBy(unaryFunction, std::less<>()); }
+
+        template <class UnaryFunction, class Comparer>
+        auto OrderBy(UnaryFunction unaryFunction, Comparer comparer) const 
+        { 
+            return CreateSortedEnumeration(begin(), end(), [=](auto const& t1, auto const& t2) { return comparer(unaryFunction(t1), unaryFunction(t2)); });
+        }
+
+        template <class UnaryFunction>
+        auto OrderByDescending(UnaryFunction unaryFunction) const { return OrderBy(unaryFunction, std::greater<>()); }
+
+        template <class UnaryFunction, class Comparer>
+        auto OrderByDescending(UnaryFunction unaryFunction, Comparer comparer) const { return OrderBy(unaryFunction, [=](auto const& t1, auto const& t2) { return comparer(t2, t1); }); }
 
         auto Reverse() const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
 

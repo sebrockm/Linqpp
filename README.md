@@ -23,9 +23,11 @@ int main()
     
     auto example = // first, transfer v into a Linqpp enumeration using From()
         From(v) // whenever std::begin(v) and std::end(v) is valid code, From(v) is also valid
+        .Reverse()
+        .OrderBy([](auto i) { return i; }) // C++ lambdas are not as concise as in C# but still OK
         .Skip(2) // will return empty enumeration (and NOT fail) if too many elements are skipped
         .Take(5) // similar here
-        .Where([](auto i) { return i % 2 != 0; }) // C++ lambdas are not as concise as in C# but still OK
+        .Where([](auto i) { return i % 2 != 0; })
         .Select([](auto i) { return i + 3.14; })
         .Concat(a); // again, whatever can deal with std::end and std::begin can be passed here
         
@@ -46,6 +48,7 @@ int main()
     std::list<int> l = { 1, 2, 3, 4, 5 };
     for (auto p : example.Zip(l, [](auto d, auto i) { return d * i; }).Take(2))
         std::cout << p << " "; // 6.14 16.28
+    std::cout << std::endl;
 }
 
 ```

@@ -5,30 +5,37 @@
 namespace Linqpp
 {
     template <class Iterator>
-    decltype(auto) ElementAt(Iterator first, size_t i, std::random_access_iterator_tag)
+    decltype(auto) ElementAt(Iterator first, int64_t i, std::random_access_iterator_tag)
     {
         return first[i];
     }
 
     template <class Iterator>
-    decltype(auto) ElementAt(Iterator first, size_t i, std::input_iterator_tag)
+    decltype(auto) ElementAt(Iterator first, int64_t i, std::input_iterator_tag)
     {
-        for (; i != 0; --i, ++first);
+        for (; i > 0; --i, ++first);
         
         return *first;
     }
 
     template <class Iterator>
-    decltype(auto) ElementAtOrDefault(Iterator first, Iterator last, size_t i, std::random_access_iterator_tag)
+    typename std::iterator_traits<Iterator>::value_type ElementAtOrDefault(Iterator first, Iterator last, int64_t i, std::random_access_iterator_tag)
     {
-        return first + i < last ? first[i] : typename std::iterator_traits<Iterator>::value_type();
+        if (i >= 0 && i < last - first) 
+            return first[i];
+        return { };
     }
 
     template <class Iterator>
-    decltype(auto) ElementAtOrDefault(Iterator first, Iterator last, size_t i, std::input_iterator_tag)
+    typename std::iterator_traits<Iterator>::value_type ElementAtOrDefault(Iterator first, Iterator last, int64_t i, std::input_iterator_tag)
     {
+        if (i < 0)
+            return { };
+
         for (; i != 0 && first != last; --i, ++first);
         
-        return first != last ? *first : typename std::iterator_traits<Iterator>::value_type();
+        if (first != last)
+            return *first;
+        return { };
     }
 }
