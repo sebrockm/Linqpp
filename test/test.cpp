@@ -18,7 +18,7 @@ auto testYield()
     return spYielder->Return();
 }
 
-int main()
+void test()
 {
     std::vector<int> v = {1,2,3,4,5};
 
@@ -120,5 +120,35 @@ int main()
     std::vector<B> vb = { B{2}, B{4}, B{1}, B{2}, B{1} };
     std::cout << From(vb).Distinct().Count() << std::endl;
 
+    for (auto b : From(vb).OrderBy([](auto const& b) -> auto const& { return b.b; }))
+        std::cout << b.b << ", ";
+    std::cout << std::endl;
+
+    for (auto b : From(vb).OrderByDescending([](auto const& b) -> auto const& { return b.b; }))
+        std::cout << b.b << ", ";
+    std::cout << std::endl;
+
+    for (auto b : From(vb).OrderBy([](auto const& b) -> auto const& { return b; }, [](auto const& b1, auto const& b2) { return b1.b < b2.b; }))
+        std::cout << b.b << ", ";
+    std::cout << std::endl;
+
+    for (auto b : From(vb).OrderByDescending([](auto const& b) -> auto const& { return b; }, [](auto const& b1, auto const& b2) { return b1.b < b2.b; }))
+        std::cout << b.b << ", ";
+    std::cout << std::endl;
+}
+
+int main()
+{
+    try
+    {
+        test();
+    }
+    catch (int i)
+    {
+        std::cerr << "test " << i << " failed." << std::endl;
+        return 1;
+    }
+
     std::cout << "All tests passed" << std::endl;
+    return 0;
 }
