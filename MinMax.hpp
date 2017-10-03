@@ -7,14 +7,14 @@ namespace Linqpp
 {
     namespace Detail
     {
-        template <class Iterator>
-        decltype(auto) InternalMax(Iterator first, Iterator last, std::forward_iterator_tag) { return *std::max_element(first, last); }
+        template <class ForwardIterator>
+        decltype(auto) InternalMax(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag) { return *std::max_element(first, last); }
 
-        template <class Iterator>
-        decltype(auto) InternalMin(Iterator first, Iterator last, std::forward_iterator_tag) { return *std::min_element(first, last); }
+        template <class ForwardIterator>
+        decltype(auto) InternalMin(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag) { return *std::min_element(first, last); }
 
-        template <class Iterator>
-        decltype(auto) InternalMax(Iterator first, Iterator last, std::input_iterator_tag)
+        template <class InputIterator>
+        decltype(auto) InternalMax(InputIterator first, InputIterator last, std::input_iterator_tag)
         {
             if (first == last)
                 return *first;
@@ -30,8 +30,8 @@ namespace Linqpp
             return maxValue;
         }
 
-        template <class Iterator>
-        decltype(auto) InternalMin(Iterator first, Iterator last, std::input_iterator_tag)
+        template <class InputIterator>
+        decltype(auto) InternalMin(InputIterator first, InputIterator last, std::input_iterator_tag)
         {
             if (first == last)
                 return *first;
@@ -48,15 +48,15 @@ namespace Linqpp
         }
     }
 
-    template <class Iterator>
-    decltype(auto) Max(Iterator first, Iterator last)
+    template <class InputIterator>
+    decltype(auto) Max(InputIterator first, InputIterator last)
     {
-        return Detail::InternalMax(first, last, typename std::iterator_traits<Iterator>::iterator_category());
+        return Detail::InternalMax(first, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 
-    template <class Iterator>
-    decltype(auto) Min(Iterator first, Iterator last)
+    template <class InputIterator>
+    decltype(auto) Min(InputIterator first, InputIterator last)
     {
-        return Detail::InternalMin(first, last, typename std::iterator_traits<Iterator>::iterator_category());
+        return Detail::InternalMin(first, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 }

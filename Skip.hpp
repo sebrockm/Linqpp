@@ -8,14 +8,14 @@ namespace Linqpp
 {
     namespace Detail
     {
-        template <class Iterator>
-        auto InternalSkip(Iterator first, size_t n, Iterator last, std::random_access_iterator_tag)
+        template <class RandomIterator>
+        auto InternalSkip(RandomIterator first, size_t n, RandomIterator last, std::random_access_iterator_tag)
         {
            return std::min(first + n, last);
         }
 
-        template <class Iterator, class Category>
-        auto InternalSkip(Iterator first, size_t n, Iterator last, Category)
+        template <class InputIterator>
+        auto InternalSkip(InputIterator first, size_t n, InputIterator last, std::input_iterator_tag)
         {
             for (size_t i = 0; i < n && first != last; ++i, ++first);
             
@@ -23,9 +23,9 @@ namespace Linqpp
         }
     }
 
-    template <class Iterator> 
-    auto Skip(Iterator first, size_t n, Iterator last)
+    template <class InputIterator> 
+    auto Skip(InputIterator first, size_t n, InputIterator last)
     {
-       return Detail::InternalSkip(first, n, last, typename std::iterator_traits<Iterator>::iterator_category());
+       return Detail::InternalSkip(first, n, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 }

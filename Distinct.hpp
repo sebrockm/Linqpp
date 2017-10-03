@@ -9,45 +9,45 @@
 
 namespace Linqpp
 {
-    template <class Iterator, class LessThanComparer>
-    auto Distinct(Iterator first, Iterator last, LessThanComparer comparer)
+    template <class InputIterator, class LessThanComparer>
+    auto Distinct(InputIterator first, InputIterator last, LessThanComparer&& comparer)
     {
-        using Value = typename std::iterator_traits<Iterator>::value_type;
+        using Value = typename std::iterator_traits<InputIterator>::value_type;
 
-        const auto distinguisher =
-            [spSet = std::make_shared<std::set<Value, LessThanComparer>>(comparer)]
+        auto distinguisher =
+            [spSet = std::make_shared<std::set<Value, LessThanComparer>>(std::forward<LessThanComparer>(comparer))]
             (auto const& item)
         {
             return spSet->insert(item).second;
         };
 
-        return From(first, last).Where(distinguisher);
+        return From(first, last).Where(std::move(distinguisher));
     }
 
-    template <class Iterator, class EqualityComparer, class Hash>
-    auto Distinct(Iterator first, Iterator last, EqualityComparer comparer, Hash hash)
+    template <class InputIterator, class EqualityComparer, class Hash>
+    auto Distinct(InputIterator first, InputIterator last, EqualityComparer&& comparer, Hash&& hash)
     {
-        using Value = typename std::iterator_traits<Iterator>::value_type;
+        using Value = typename std::iterator_traits<InputIterator>::value_type;
 
-        const auto distinguisher = 
-            [spSet = std::make_shared<std::unordered_set<Value, Hash, EqualityComparer>>(1024, hash, comparer)]
+        auto distinguisher = 
+            [spSet = std::make_shared<std::unordered_set<Value, Hash, EqualityComparer>>(1024, std::forward<Hash>(hash), std::forward<EqualityComparer>(comparer))]
             (auto const& item)
         {
             return spSet->insert(item).second;
         };
 
-        return From(first, last).Where(distinguisher);
+        return From(first, last).Where(std::move(distinguisher));
     }
 
     namespace Detail
     {
         // has no less
-        template <class Iterator>
-        auto InternalDistinct2(Iterator first, Iterator last, ...)
+        template <class InputIterator>
+        auto InternalDistinct2(InputIterator first, InputIterator last, ...)
         {
-            using Value = typename std::iterator_traits<Iterator>::value_type;
+            using Value = typename std::iterator_traits<InputIterator>::value_type;
 
-            const auto distinguisher =
+            auto distinguisher =
                 [spSet = std::make_shared<std::vector<Value>>()]
                 (auto const& item)
             {
@@ -58,34 +58,34 @@ namespace Linqpp
                 return true;
             };
 
-            return From(first, last).Where(distinguisher);
+            return From(first, last).Where(std::move(distinguisher));
         }
 
         // has less
-        template <class Iterator, class Value = typename std::iterator_traits<Iterator>::value_type, class = decltype(std::declval<Value>() < std::declval<Value>())>
-        auto InternalDistinct2(Iterator first, Iterator last, int)
+        template <class InputIterator, class Value = typename std::iterator_traits<InputIterator>::value_type, class = decltype(std::declval<Value>() < std::declval<Value>())>
+        auto InternalDistinct2(InputIterator first, InputIterator last, int)
         {
             return Distinct(first, last, std::less<>());
         }
 
         // has hash
-        template <class Iterator, class Value = typename std::iterator_traits<Iterator>::value_type,
+        template <class InputIterator, class Value = typename std::iterator_traits<InputIterator>::value_type,
              class = decltype(std::hash<Value>()(std::declval<Value>())), class = decltype(std::declval<Value>() == std::declval<Value>())>
-        auto InternalDistinct1(Iterator first, Iterator last, int)
+        auto InternalDistinct1(InputIterator first, InputIterator last, int)
         {
             return Distinct(first, last, std::equal_to<>(), std::hash<Value>());
         }
         
         // has no hash
-        template <class Iterator>
-        auto InternalDistinct1(Iterator first, Iterator last, ...)
+        template <class InputIterator>
+        auto InternalDistinct1(InputIterator first, InputIterator last, ...)
         {
             return InternalDistinct2(first, last, 0);
         }
     }
 
-    template <class Iterator>
-    auto Distinct(Iterator first, Iterator last)
+    template <class InputIterator>
+    auto Distinct(InputIterator first, InputIterator last)
     {
         return Detail::InternalDistinct1(first, last, 0);
     }

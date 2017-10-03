@@ -10,30 +10,30 @@ namespace Linqpp
 {
     namespace Detail
     {
-        template <class Iterator>
-        auto InternalGetEnumeratorFromTake(Iterator first, size_t n, Iterator last, std::random_access_iterator_tag)
+        template <class RandomIterator>
+        auto InternalGetEnumeratorFromTake(RandomIterator first, size_t n, RandomIterator last, std::random_access_iterator_tag)
         {
            return From(first, std::min(first + n, last));
         }
 
-        template <class Iterator, class Category>
-        class TakeIterator : public IteratorAdapter<TakeIterator<Iterator, Category>>
+        template <class InputIterator, class Category>
+        class TakeIterator : public IteratorAdapter<TakeIterator<InputIterator, Category>>
         {
         private:
-            Iterator _first;
-            Iterator _last;
+            InputIterator _first;
+            InputIterator _last;
             size_t _position;
 
         public:
             using iterator_category = std::conditional_t<std::is_base_of<std::bidirectional_iterator_tag, Category>::value, 
                 std::forward_iterator_tag, Category>;
-            using value_type = typename std::iterator_traits<Iterator>::value_type;
-            using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-            using reference = typename std::iterator_traits<Iterator>::reference;
-            using pointer = typename std::iterator_traits<Iterator>::pointer;
+            using value_type = typename std::iterator_traits<InputIterator>::value_type;
+            using difference_type = typename std::iterator_traits<InputIterator>::difference_type;
+            using reference = typename std::iterator_traits<InputIterator>::reference;
+            using pointer = typename std::iterator_traits<InputIterator>::pointer;
 
         public:
-            TakeIterator(Iterator first, size_t position, Iterator last) : _first(first), _last(last), _position(position) { }
+            TakeIterator(InputIterator first, size_t position, InputIterator last) : _first(first), _last(last), _position(position) { }
             TakeIterator() = default;
             TakeIterator(TakeIterator const&) = default;
             TakeIterator(TakeIterator&&) = default;
@@ -50,16 +50,17 @@ namespace Linqpp
             void Increment() { ++_first; ++_position; }
         };
 
-        template <class Iterator, class Category>
-        auto InternalGetEnumeratorFromTake(Iterator first, size_t n, Iterator last, Category)
+        template <class InputIterator>
+        auto InternalGetEnumeratorFromTake(InputIterator first, size_t n, InputIterator last, std::input_iterator_tag)
         {
-           return From(TakeIterator<Iterator, Category>(first, 0, last), TakeIterator<Iterator, Category>(last, n, last));
+            using Category = typename std::iterator_traits<InputIterator>::iterator_category;
+            return From(TakeIterator<InputIterator, Category>(first, 0, last), TakeIterator<InputIterator, Category>(last, n, last));
         }
     }
 
-    template <class Iterator, class Category = typename std::iterator_traits<Iterator>::iterator_category>
-    auto GetEnumeratorFromTake(Iterator first, size_t n, Iterator last)
+    template <class InputIterator>
+    auto GetEnumeratorFromTake(InputIterator first, size_t n, InputIterator last)
     {
-       return Detail::InternalGetEnumeratorFromTake(first, n, last, Category());
+       return Detail::InternalGetEnumeratorFromTake(first, n, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 }

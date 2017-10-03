@@ -4,13 +4,13 @@
 
 namespace Linqpp
 {
-    template <class Iterator>
+    template <class InputIterator>
     class Enumeration;
 
-    template <class Iterator>
-    auto From(Iterator first, Iterator last)
+    template <class InputIterator>
+    auto From(InputIterator first, InputIterator last)
     {
-        return Enumeration<Iterator>(first, last);
+        return Enumeration<InputIterator>(first, last);
     }
 
     template <class Container>

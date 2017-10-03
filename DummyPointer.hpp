@@ -17,7 +17,7 @@ namespace Linqpp
             operator T*() const { return std::addressof(_value); }
         };
 
-        template <class T>
-        auto CreateDummyPointer(T&& value) { return DummyPointer<T>(std::move(value)); }
+        template <class T, class = std::enable_if_t<std::is_rvalue_reference<T&&>::value>>
+        auto CreateDummyPointer(T&& value) { return DummyPointer<std::remove_reference_t<T>>(std::move(value)); }
     }
 }

@@ -4,29 +4,29 @@
 
 namespace Linqpp
 {
-    template <class Iterator, class Predicate>
-    class WhereIterator : public IteratorAdapter<WhereIterator<Iterator, Predicate>>
+    template <class InputIterator, class Predicate>
+    class WhereIterator : public IteratorAdapter<WhereIterator<InputIterator, Predicate>>
     {
     // Fields
     private:
-        Iterator _first;
-        const Iterator _last;
+        InputIterator _first;
+        const InputIterator _last;
         Predicate _predicate;
 
     public:
         using iterator_category = std::conditional_t<
-            std::is_base_of<std::bidirectional_iterator_tag, typename std::iterator_traits<Iterator>::iterator_category>::value,
+            std::is_base_of<std::bidirectional_iterator_tag, typename std::iterator_traits<InputIterator>::iterator_category>::value,
                 std::bidirectional_iterator_tag,
-                typename std::iterator_traits<Iterator>::iterator_category>;
-        using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-        using value_type = typename std::iterator_traits<Iterator>::value_type;
-        using reference = typename std::iterator_traits<Iterator>::reference;
-        using pointer = typename std::iterator_traits<Iterator>::pointer;
+                typename std::iterator_traits<InputIterator>::iterator_category>;
+        using difference_type = typename std::iterator_traits<InputIterator>::difference_type;
+        using value_type = typename std::iterator_traits<InputIterator>::value_type;
+        using reference = typename std::iterator_traits<InputIterator>::reference;
+        using pointer = typename std::iterator_traits<InputIterator>::pointer;
 
     // Constructors, destructor
     public:
-        WhereIterator(Iterator first, Iterator last, Predicate predicate)
-            : _first(first), _last(last), _predicate(predicate) { AdvanceUntilFit(); }
+        WhereIterator(InputIterator first, InputIterator last, Predicate predicate)
+            : _first(first), _last(last), _predicate(std::move(predicate)) { AdvanceUntilFit(); }
 
         WhereIterator() = default;
         WhereIterator(WhereIterator const&) = default;
@@ -56,9 +56,9 @@ namespace Linqpp
         }
     };
 
-    template <class Iterator, class Predicate>
-    auto CreateWhereIterator(Iterator first, Iterator last, Predicate predicate)
+    template <class InputIterator, class Predicate>
+    auto CreateWhereIterator(InputIterator first, InputIterator last, Predicate&& predicate)
     {
-        return WhereIterator<Iterator, Predicate>(first, last, predicate);
+        return WhereIterator<InputIterator, std::remove_reference_t<Predicate>>(first, last, std::forward<Predicate>(predicate));
     }
 }

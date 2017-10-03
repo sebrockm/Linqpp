@@ -7,25 +7,25 @@ using namespace Linqpp::Detail;
 
 namespace Linqpp
 {
-    template <class Iterator, class Function>
-    class SelectIterator : public IteratorAdapter<SelectIterator<Iterator, Function>>
+    template <class InputIterator, class UnaryFunction>
+    class SelectIterator : public IteratorAdapter<SelectIterator<InputIterator, UnaryFunction>>
     {
     // Fields
     private:
-        Iterator _iterator;
-        Function _function;
+        InputIterator _iterator;
+        UnaryFunction _function;
 
     public:
-        using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
-        using difference_type = typename std::iterator_traits<Iterator>::difference_type;
+        using iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
+        using difference_type = typename std::iterator_traits<InputIterator>::difference_type;
         using value_type = decltype(_function(*_iterator));
         using reference = value_type;
         using pointer = DummyPointer<value_type>;
 
     // Constructors, destructor
     public:
-        SelectIterator(Iterator iterator, Function function)
-            : _iterator(iterator), _function(function)
+        SelectIterator(InputIterator iterator, UnaryFunction function)
+            : _iterator(iterator), _function(std::move(function))
         { }
 
         SelectIterator() = default;
@@ -44,9 +44,9 @@ namespace Linqpp
         difference_type Difference(SelectIterator const& other) const { return _iterator - other._iterator; }
     };
 
-    template <class Iterator, class Function>
-    auto CreateSelectIterator(Iterator iterator, Function function)
+    template <class InputIterator, class UnaryFunction>
+    auto CreateSelectIterator(InputIterator iterator, UnaryFunction&& function)
     {
-        return SelectIterator<Iterator, Function>(iterator, function);
+        return SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>(iterator, std::forward<UnaryFunction>(function));
     }
 }

@@ -7,16 +7,16 @@ namespace Linqpp
 {
     namespace Detail
     {
-        template <class Iterator>
-        auto InternalLast(Iterator first, Iterator last, std::bidirectional_iterator_tag)
+        template <class BidirectionalIterator>
+        auto InternalLast(BidirectionalIterator first, BidirectionalIterator last, std::bidirectional_iterator_tag)
         {
             if (first != last)
                 return --last;
             return last;
         }
 
-        template <class Iterator>
-        auto InternalLast(Iterator first, Iterator last, std::forward_iterator_tag)
+        template <class ForwardIterator>
+        auto InternalLast(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag)
         {
             if (first == last)
                 return first;
@@ -29,26 +29,26 @@ namespace Linqpp
             }
         }
 
-        template <class Iterator>
-        auto InternalLast(Iterator first, Iterator last, std::input_iterator_tag) = delete;
+        template <class InputIterator>
+        auto InternalLast(InputIterator first, InputIterator last, std::input_iterator_tag) = delete;
 
-        template <class Iterator, class Predicate>
-        auto InternalLast(Iterator first, Iterator last, Predicate predicate, std::bidirectional_iterator_tag)
+        template <class BidirectionalIterator, class Predicate>
+        auto InternalLast(BidirectionalIterator first, BidirectionalIterator last, Predicate&& predicate, std::bidirectional_iterator_tag)
         {
             auto last2 = last;
 
             while (first != last)
             {
                 --last;
-                if (predicate(*last))
+                if (std::forward<Predicate>(predicate)(*last))
                     return last;
             }
 
             return last2;
         }
 
-        template <class Iterator, class Predicate>
-        auto InternalLast(Iterator first, Iterator last, Predicate predicate, std::forward_iterator_tag)
+        template <class ForwardIterator, class Predicate>
+        auto InternalLast(ForwardIterator first, ForwardIterator last, Predicate predicate, std::forward_iterator_tag)
         {
             first = std::find_if(first, last, predicate);
             if (first == last)
@@ -63,19 +63,19 @@ namespace Linqpp
             }
         }
 
-        template <class Iterator, class Predicate>
-        auto InternalLast(Iterator first, Iterator last, Predicate predicate, std::input_iterator_tag) = delete;
+        template <class InputIterator, class Predicate>
+        auto InternalLast(InputIterator first, InputIterator last, Predicate predicate, std::input_iterator_tag) = delete;
     }
 
-    template <class Iterator>
-    auto Last(Iterator first, Iterator last)
+    template <class ForwardIterator>
+    auto Last(ForwardIterator first, ForwardIterator last)
     {
-        return Detail::InternalLast(first, last, typename std::iterator_traits<Iterator>::iterator_category());
+        return Detail::InternalLast(first, last, typename std::iterator_traits<ForwardIterator>::iterator_category());
     }
 
-    template <class Iterator, class Predicate>
-    auto Last(Iterator first, Iterator last, Predicate predicate)
+    template <class ForwardIterator, class Predicate>
+    auto Last(ForwardIterator first, ForwardIterator last, Predicate&& predicate)
     {
-        return Detail::InternalLast(first, last, predicate, typename std::iterator_traits<Iterator>::iterator_category());
+        return Detail::InternalLast(first, last, std::forward<Predicate>(predicate), typename std::iterator_traits<ForwardIterator>::iterator_category());
     }
 }

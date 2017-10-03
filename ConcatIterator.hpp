@@ -49,10 +49,7 @@ namespace Linqpp
         void Increment() { if (_current1 != _last1) ++_current1; else ++_current2; }
         void Decrement() { if (_current2 == _first2) --_current1; else --_current2; }
 
-        difference_type Difference(ConcatIterator const& other) const 
-        { 
-            return (_current1 - other._current1) + (_current2 - other._current2);
-        }
+        difference_type Difference(ConcatIterator const& other) const { return (_current1 - other._current1) + (_current2 - other._current2); }
 
         void Move(difference_type n)
         {

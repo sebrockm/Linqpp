@@ -45,12 +45,12 @@ namespace Linqpp
         bool operator>=(Iterator const& other) const { return (*this - other) >= 0; }
     };
 
-    template <class Iterator>
-    auto operator+(Iterator iterator, typename std::iterator_traits<Iterator>::difference_type n) { return iterator += n; }
+    template <class RandomIterator>
+    auto operator+(RandomIterator iterator, typename std::iterator_traits<RandomIterator>::difference_type n) { return iterator += n; }
 
-    template <class Iterator>
-    auto operator+(typename std::iterator_traits<Iterator>::difference_type n, Iterator iterator) { return iterator += n; }
+    template <class RandomIterator>
+    auto operator+(typename std::iterator_traits<RandomIterator>::difference_type n, RandomIterator iterator) { return iterator += n; }
 
-    template <class Iterator>
-    auto operator-(Iterator iterator, typename std::iterator_traits<Iterator>::difference_type n) { return iterator -= n; }
+    template <class RandomIterator>
+    auto operator-(RandomIterator iterator, typename std::iterator_traits<RandomIterator>::difference_type n) { return iterator -= n; }
 }

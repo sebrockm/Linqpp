@@ -10,10 +10,10 @@
 
 namespace Linqpp
 {
-    template <class Iterator, class Comparer>
-    class SortingIterator : public IteratorAdapter<SortingIterator<Iterator, Comparer>>
+    template <class InputIterator, class LessThanComparer>
+    class SortingIterator : public IteratorAdapter<SortingIterator<InputIterator, LessThanComparer>>
     {
-        using Vector = std::vector<typename std::iterator_traits<Iterator>::value_type>;
+        using Vector = std::vector<typename std::iterator_traits<InputIterator>::value_type>;
         using Traits = std::iterator_traits<typename Vector::iterator>;
 
     public:
@@ -25,16 +25,16 @@ namespace Linqpp
 
     // Fields
     private:
-        const Iterator _first;
-        const Iterator _last;
+        const InputIterator _first;
+        const InputIterator _last;
         const std::shared_ptr<Vector> _spData = std::make_shared<Vector>();
         size_t _position = 0;
-        Comparer _comparer;
+        LessThanComparer _comparer;
 
     // Constructors, destructor
     public:
-        SortingIterator(Iterator first, Iterator last, Comparer comparer)
-            : _first(first), _last(last), _comparer(comparer)
+        SortingIterator(InputIterator first, InputIterator last, LessThanComparer comparer)
+            : _first(first), _last(last), _comparer(std::move(comparer))
         { }
 
         SortingIterator() = default;
@@ -64,10 +64,10 @@ namespace Linqpp
         }
     };
 
-    template <class Iterator, class Comparer>
-    auto CreateSortedEnumeration(Iterator first, Iterator last, Comparer comparer)
+    template <class InputIterator, class LessThanComparer>
+    auto CreateSortedEnumeration(InputIterator first, InputIterator last, LessThanComparer&& comparer)
     {
-        auto firstSorted = SortingIterator<Iterator, Comparer>(first, last, comparer);
+        auto firstSorted = SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>(first, last, std::forward<LessThanComparer>(comparer));
         return From(firstSorted, firstSorted + From(first, last).Count());
     }
 }
