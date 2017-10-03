@@ -28,4 +28,20 @@ namespace Linqpp
     {
        return Detail::InternalSkip(first, n, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
+
+    template <class InputIterator, class Predicate>
+    auto SkipWhile(InputIterator first, InputIterator last, Predicate&& predicate,
+        decltype(std::forward<Predicate>(predicate)(std::declval<typename std::iterator_traits<InputIterator>::value_type>()))* = nullptr)
+    {
+        for (; first != last && std::forward<Predicate>(predicate)(*first); ++first);
+        return first;
+    }
+
+    template <class InputIterator, class Predicate>
+    auto SkipWhile(InputIterator first, InputIterator last, Predicate&& predicate,
+        decltype(std::forward<Predicate>(predicate)(std::declval<typename std::iterator_traits<InputIterator>::value_type>(), 0))* = nullptr)
+    {
+        for (size_t i = 0; first != last && std::forward<Predicate>(predicate)(*first, i); ++i, ++first);
+        return first;
+    }
 }

@@ -74,6 +74,12 @@ void test()
     if (!Enumerable::Range(1, 5).SequenceEqual(From(v)))
         throw 16;
 
+    if (From(v).SkipWhile([](auto i) { return i < 4; }).Count() != 2)
+        throw 17;
+
+    if (From(v).SkipWhile([](auto i, auto j) { return j < 4; }).First() != 5)
+        throw 18;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;

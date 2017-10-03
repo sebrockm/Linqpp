@@ -170,6 +170,9 @@ namespace Linqpp
 
         auto Skip(size_t n) const { return From(Linqpp::Skip(begin(), n, end()), end()); }
 
+        template <class Predicate> 
+        auto SkipWhile(Predicate&& predicate) const { return From(Linqpp::SkipWhile(begin(), end(), std::forward<Predicate>(predicate)), end()); }
+
         auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
 
         auto ToVector() const { return std::vector<value_type>(begin(), end()); }
