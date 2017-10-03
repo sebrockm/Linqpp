@@ -187,5 +187,11 @@ namespace Linqpp
         {
             return From(CreateIntIterator(start), CreateIntIterator(start + count));
         }
+
+        template <class T>
+        static auto Repeat(T t, size_t n)
+        {
+            return Range((size_t)0, n).Select([=](auto) { return t; });
+        }
     };
 }

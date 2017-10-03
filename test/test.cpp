@@ -64,6 +64,10 @@ void test()
     if (From(l).ElementAtOrDefault(2) != 8)
         throw 13;
 
+    auto rep = Enumerable::Repeat(1.234, 10);
+    if (rep.Count() != 10 || !rep.All([](auto d) { return d == 1.234; }))
+        throw 14;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;
