@@ -28,8 +28,8 @@ namespace Linqpp
     class Enumeration
     {
     private:
-        InputIterator _first;
-        InputIterator _last;
+        const InputIterator _first;
+        const InputIterator _last;
 
     public:
         using value_type = typename std::iterator_traits<InputIterator>::value_type;
@@ -156,6 +156,18 @@ namespace Linqpp
         template <class UnaryFunction>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction)); }
 
+        template <class Container>
+        auto SequenceEqual(Container&& container) const
+        {
+            return std::equal(begin(), end(), std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)));
+        }
+
+        template <class Container, class EqualityComparer>
+        auto SequenceEqual(Container&& container, EqualityComparer&& comparer) const
+        {
+            return std::equal(begin(), end(), std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)), std::forward<EqualityComparer>(comparer));
+        }
+
         auto Skip(size_t n) const { return From(Linqpp::Skip(begin(), n, end()), end()); }
 
         auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
@@ -191,7 +203,7 @@ namespace Linqpp
         template <class T>
         static auto Repeat(T t, size_t n)
         {
-            return Range((size_t)0, n).Select([=](auto) { return t; });
+            return Range((size_t)0, n).Select([=](auto const&) { return t; });
         }
     };
 }

@@ -68,6 +68,12 @@ void test()
     if (rep.Count() != 10 || !rep.All([](auto d) { return d == 1.234; }))
         throw 14;
 
+    if (From(v).SequenceEqual(l))
+        throw 15;
+
+    if (!Enumerable::Range(1, 5).SequenceEqual(From(v)))
+        throw 16;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;
