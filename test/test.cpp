@@ -80,6 +80,12 @@ void test()
     if (From(v).SkipWhile([](auto i, auto j) { return j < 4; }).First() != 5)
         throw 18;
 
+    if (Enumerable::Range(0, 0).DefaultIfEmpty(20).Count() != 1)
+        throw 19;
+
+    if (Enumerable::Range(0, 0).DefaultIfEmpty(20).First() != 20)
+        throw 20;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;

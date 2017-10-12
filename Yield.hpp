@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Enumeration.hpp"
+#include "From.hpp"
+#include "IteratorAdapter.hpp"
+
 #include <memory>
 #include <future>
 #include <condition_variable>
 #include <queue>
-
-#include "Enumerable.hpp"
-#include "From.hpp"
-#include "IteratorAdapter.hpp"
 
 namespace Linqpp
 {

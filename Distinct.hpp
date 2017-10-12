@@ -1,5 +1,5 @@
 #include "From.hpp"
-#include "Enumerable.hpp"
+#include "Enumeration.hpp"
 
 #include <algorithm>
 #include <memory>
