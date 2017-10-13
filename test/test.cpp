@@ -93,8 +93,14 @@ void test()
         throw 22;
 
     std::vector<int> vy = testYield().ToVector();
-    if (testYield().ToVector().Count() != vy.size())
-        throw 22;
+    if (!testYield().SequenceEqual(vy))
+        throw 23;
+
+    if (!From(v).Select([](auto vi, auto i) { return i; }).SequenceEqual(Enumerable::Range(0, From(v).Count())))
+        throw 24;
+
+    if (!From(v).Select([](auto vi, auto i) { return vi; }).SequenceEqual(v))
+        throw 25;
 
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";

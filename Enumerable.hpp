@@ -7,8 +7,8 @@ namespace Linqpp
         template <class T>
         static auto Empty();
 
-        template <class Int>
-        static auto Range(Int start, Int count);
+        template <class Int1, class Int2>
+        static auto Range(Int1 start, Int2 count);
 
         template <class T>
         static auto Repeat(T t, size_t n);
@@ -26,10 +26,10 @@ namespace Linqpp
         return Range(0, 0).Select([](auto const&) { return *(T*)nullptr; }).ToVector();
     }
 
-    template <class Int>
-    auto Enumerable::Range(Int start, Int count)
+    template <class Int1, class Int2>
+    auto Enumerable::Range(Int1 start, Int2 count)
     {
-        return From(CreateIntIterator(start), CreateIntIterator(start + count));
+        return From(CreateIntIterator(start + (Int2)0), CreateIntIterator(start + count));
     }
 
     template <class T>

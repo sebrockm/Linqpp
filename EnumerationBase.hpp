@@ -44,7 +44,10 @@ namespace Linqpp
 
     public:
         template <class Seed, class BinaryFunction>
-        auto Aggregate(Seed const& seed, BinaryFunction&& binaryFunction) const { return std::accumulate(begin(), end(), seed, std::forward<BinaryFunction>(binaryFunction)); }
+        auto Aggregate(Seed const& seed, BinaryFunction&& binaryFunction) const
+        {
+            return std::accumulate(begin(), end(), seed, std::forward<BinaryFunction>(binaryFunction));
+        }
 
         template <class BinaryFunction>
         auto Aggregate(BinaryFunction&& binaryFunction) const
@@ -93,7 +96,10 @@ namespace Linqpp
         auto Distinct(LessThanComparer&& comparer) const { return Linqpp::Distinct(begin(), end(), std::forward<LessThanComparer>(comparer)); }
 
         template <class EqualityComparer, class Hash>
-        auto Distinct(EqualityComparer&& comparer, Hash&& hash) const { return Linqpp::Distinct(begin(), end(), std::forward<EqualityComparer>(comparer), std::forward<Hash>(hash)); }
+        auto Distinct(EqualityComparer&& comparer, Hash&& hash) const
+        {
+            return Linqpp::Distinct(begin(), end(), std::forward<EqualityComparer>(comparer), std::forward<Hash>(hash));
+        }
         
         decltype(auto) ElementAt(int64_t i) const { return Linqpp::ElementAt(begin(), i, iterator_category()); }
 
@@ -157,8 +163,14 @@ namespace Linqpp
 
         auto Reverse() const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
 
-        template <class UnaryFunction>
+        template <class UnaryFunction, class = decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))>
         auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction)); }
+
+        template <class UnaryFunctionWithIndex, class = decltype(std::declval<UnaryFunctionWithIndex>()(std::declval<value_type>(), 0))>
+        auto Select(UnaryFunctionWithIndex &&unaryFunctionWithIndex) const
+        {
+            return Zip(Enumerable::Range(0, Count()), std::forward<UnaryFunctionWithIndex>(unaryFunctionWithIndex));
+        }
 
         template <class Container>
         auto SequenceEqual(Container&& container) const
@@ -169,7 +181,9 @@ namespace Linqpp
         template <class Container, class EqualityComparer>
         auto SequenceEqual(Container&& container, EqualityComparer&& comparer) const
         {
-            return std::equal(begin(), end(), std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)), std::forward<EqualityComparer>(comparer));
+            return std::equal(begin(), end(),
+                    std::begin(std::forward<Container>(container)), std::end(std::forward<Container>(container)),
+                    std::forward<EqualityComparer>(comparer));
         }
 
         auto Skip(size_t n) const { return From(Linqpp::Skip(begin(), n, end()), end()); }
