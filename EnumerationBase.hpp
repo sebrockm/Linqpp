@@ -3,7 +3,8 @@
 #include "ConcatIterator.hpp"
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
-#include "Enumeration.hpp"
+#include "Enumerable.hpp"
+#include "ExtendingEnumeration.hpp"
 #include "From.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
@@ -16,33 +17,30 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <numeric>
-#include <set>
-#include <unordered_set>
-#include <vector>
 
 namespace Linqpp
 {
-    struct Enumerable;
+    template <class InputIterator>
+    auto From(InputIterator first, InputIterator last);
 
     template <class InputIterator>
-    class Enumeration
+    class EnumerationBase
     {
-    private:
-        const InputIterator _first;
-        const InputIterator _last;
-
     public:
         using value_type = typename std::iterator_traits<InputIterator>::value_type;
         using iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
+        using iterator = InputIterator;
+
+    protected:
+        EnumerationBase() = default;
 
     public:
-        Enumeration(InputIterator first, InputIterator last) : _first(first), _last(last) { }
+        virtual ~EnumerationBase() = default;
 
     public:
-        auto begin() const { return _first; }
-        auto end() const { return _last; }
+        virtual InputIterator begin() const = 0;
+        virtual InputIterator end() const = 0;
 
     public:
         template <class Seed, class BinaryFunction>
@@ -85,9 +83,9 @@ namespace Linqpp
         template <class Predicate>
         size_t Count(Predicate&& predicate) const { return std::count_if(begin(), end(), std::forward<Predicate>(predicate)); }
 
-        auto DefaultIfEmpty(value_type const& defaultValue) const { return Concat(Enumerable::Repeat(defaultValue, Any() ? 1 : 0)); }
-
         auto DefaultIfEmpty() const { return DefaultIfEmpty(value_type{}); }
+
+        auto DefaultIfEmpty(value_type const& value) const { return Concat(Enumerable::Repeat(value, Any() ? 0 : 1)); }
 
         auto Distinct() const { return Linqpp::Distinct(begin(), end()); }
 
@@ -181,7 +179,7 @@ namespace Linqpp
 
         auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
 
-        auto ToVector() const { return std::vector<value_type>(begin(), end()); }
+        auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }
 
         template <class Predicate>
         auto Where(Predicate predicate) const

@@ -1,7 +1,8 @@
-#include "Linqpp.hpp" // the core of Linqpp that provides all functionality
 #include <vector>
 #include <list>
 #include <iostream>
+
+#include "Linqpp.hpp" // the core of Linqpp that provides all functionality
 
 using namespace Linqpp;
 

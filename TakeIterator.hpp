@@ -7,6 +7,9 @@
 
 namespace Linqpp
 {
+    template <class InputIterator>
+    auto From(InputIterator first, InputIterator last);
+
     namespace Detail
     {
         template <class RandomIterator>

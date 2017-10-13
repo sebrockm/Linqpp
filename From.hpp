@@ -1,16 +1,13 @@
 #pragma once
 
-#include "Enumeration.hpp"
+#include "IteratorEnumeration.hpp"
 
 namespace Linqpp
 {
     template <class InputIterator>
-    class Enumeration;
-
-    template <class InputIterator>
     auto From(InputIterator first, InputIterator last)
     {
-        return Enumeration<InputIterator>(first, last);
+        return IteratorEnumeration<InputIterator>(first, last);
     }
 
     template <class Container>

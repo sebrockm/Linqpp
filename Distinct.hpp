@@ -1,5 +1,4 @@
 #include "From.hpp"
-#include "Enumeration.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -9,6 +8,9 @@
 
 namespace Linqpp
 {
+    template <class InputIterator>
+    auto From(InputIterator first, InputIterator last);
+
     template <class InputIterator, class LessThanComparer>
     auto Distinct(InputIterator first, InputIterator last, LessThanComparer&& comparer)
     {

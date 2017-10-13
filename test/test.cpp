@@ -80,11 +80,21 @@ void test()
     if (From(v).SkipWhile([](auto i, auto j) { return j < 4; }).First() != 5)
         throw 18;
 
-    if (Enumerable::Range(0, 0).DefaultIfEmpty(20).Count() != 1)
+    if (Enumerable::Empty<std::vector<int>>().Any())
         throw 19;
 
-    if (Enumerable::Range(0, 0).DefaultIfEmpty(20).First() != 20)
+    if (Enumerable::Empty<int>().DefaultIfEmpty(20).Count() != 1)
         throw 20;
+
+    if (From(v).DefaultIfEmpty().Count() != v.size())
+        throw 21;
+
+    if (Enumerable::Empty<int>().DefaultIfEmpty(20).First() != 20)
+        throw 22;
+
+    std::vector<int> vy = testYield().ToVector();
+    if (testYield().ToVector().Count() != vy.size())
+        throw 22;
 
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Enumeration.hpp"
 #include "From.hpp"
 #include "IteratorAdapter.hpp"
 
