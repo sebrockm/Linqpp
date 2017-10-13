@@ -3,6 +3,7 @@
 #include "ConcatIterator.hpp"
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
+#include "ExtendingEnumeration.hpp"
 #include "From.hpp"
 #include "IntIterator.hpp"
 #include "Last.hpp"
@@ -24,23 +25,26 @@
 
 namespace Linqpp
 {
-    template <class InputIterator>
-    class Enumeration
-    {
-    private:
-        const InputIterator _first;
-        const InputIterator _last;
+    template <class Container>
+    class ExtendingEnumeration;
 
+    template <class InputIterator>
+    class EnumerationBase
+    {
     public:
         using value_type = typename std::iterator_traits<InputIterator>::value_type;
         using iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
+        using iterator = InputIterator;
+
+    protected:
+        EnumerationBase() = default;
 
     public:
-        Enumeration(InputIterator first, InputIterator last) : _first(first), _last(last) { }
+        virtual ~EnumerationBase() = default;
 
     public:
-        auto begin() const { return _first; }
-        auto end() const { return _last; }
+        virtual InputIterator begin() const = 0;
+        virtual InputIterator end() const = 0;
 
     public:
         template <class Seed, class BinaryFunction>
@@ -175,7 +179,7 @@ namespace Linqpp
 
         auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
 
-        auto ToVector() const { return std::vector<value_type>(begin(), end()); }
+        auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }
 
         template <class Predicate>
         auto Where(Predicate predicate) const
@@ -193,6 +197,21 @@ namespace Linqpp
 
             return From(CreateZipIterator(begin(), cBegin, binaryFunction), CreateZipIterator(end(), cEnd, binaryFunction));
         }
+    };
+
+    template <class InputIterator>
+    class Enumeration : public EnumerationBase<InputIterator>
+    {
+    private:
+        const InputIterator _first;
+        const InputIterator _last;
+
+    public:
+        Enumeration(InputIterator first, InputIterator last) : _first(first), _last(last) { }
+
+    public:
+        virtual InputIterator begin() const override { return _first; }
+        virtual InputIterator end() const override { return _last; }
     };
 
     struct Enumerable

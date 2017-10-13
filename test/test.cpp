@@ -80,6 +80,11 @@ void test()
     if (From(v).SkipWhile([](auto i, auto j) { return j < 4; }).First() != 5)
         throw 18;
 
+    std::vector<int> vy = testYield().ToVector();
+    auto vz = testYield().ToVector();
+    if (vz.Count() != vy.size())
+        throw 19;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;
