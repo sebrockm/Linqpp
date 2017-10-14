@@ -1,5 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <iterator>
+#include <numeric>
+
 #include "ConcatIterator.hpp"
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
@@ -14,10 +18,6 @@
 #include "TakeIterator.hpp"
 #include "WhereIterator.hpp"
 #include "ZipIterator.hpp"
-
-#include <algorithm>
-#include <iterator>
-#include <numeric>
 
 namespace Linqpp
 {
@@ -163,14 +163,8 @@ namespace Linqpp
 
         auto Reverse() const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
 
-        template <class UnaryFunction, class = decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))>
-        auto Select(UnaryFunction unaryFunction) const { return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction)); }
-
-        template <class UnaryFunctionWithIndex, class = decltype(std::declval<UnaryFunctionWithIndex>()(std::declval<value_type>(), 0))>
-        auto Select(UnaryFunctionWithIndex &&unaryFunctionWithIndex) const
-        {
-            return Zip(Enumerable::Range(0, Count()), std::forward<UnaryFunctionWithIndex>(unaryFunctionWithIndex));
-        }
+        template <class UnaryFunction>
+        auto Select(UnaryFunction&& unaryFunction) const { return InternalSelect(std::forward<UnaryFunction>(unaryFunction), nullptr); }
 
         template <class Container>
         auto SequenceEqual(Container&& container) const
@@ -196,12 +190,7 @@ namespace Linqpp
         auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }
 
         template <class Predicate>
-        auto Where(Predicate predicate) const
-        {
-            auto first = CreateWhereIterator(begin(), end(), predicate);
-            auto last = CreateWhereIterator(end(), end(), predicate);
-            return From(first, last);
-        }
+        auto Where(Predicate&& predicate) const { return InternalWhere(std::forward<Predicate>(predicate), nullptr); }
 
         template <class Container, class BinaryFunction>
         auto Zip(Container&& container, BinaryFunction binaryFunction) const
@@ -210,6 +199,34 @@ namespace Linqpp
             auto cEnd = std::end(std::forward<Container>(container));
 
             return From(CreateZipIterator(begin(), cBegin, binaryFunction), CreateZipIterator(end(), cEnd, binaryFunction));
+        }
+
+    private:
+        template <class UnaryFunction>
+        auto InternalSelect(UnaryFunction unaryFunction, decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))*) const
+        {
+            return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction));
+        }
+
+        template <class UnaryFunctionWithIndex> 
+        auto InternalSelect(UnaryFunctionWithIndex&& unaryFunctionWithIndex, decltype(std::declval<UnaryFunctionWithIndex>()(std::declval<value_type>(), 0))*) const
+        {
+            return Zip(Enumerable::Range(0, Count()), std::forward<UnaryFunctionWithIndex>(unaryFunctionWithIndex));
+        }
+
+        template <class Predicate> 
+        auto InternalWhere(Predicate predicate, decltype(std::declval<Predicate>()(std::declval<value_type>()))*) const
+        {
+            auto first = CreateWhereIterator(begin(), end(), predicate);
+            auto last = CreateWhereIterator(end(), end(), predicate);
+            return From(first, last);
+        }
+
+        template <class PredicateWithIndex> 
+        auto InternalWhere(PredicateWithIndex predicateWithIndex, decltype(std::declval<PredicateWithIndex>()(std::declval<value_type>(), 0))*) const
+        {
+            return Zip(Enumerable::Range(0, Count()), [](auto const& v, auto i) { return std::pair<decltype(v), decltype(i)>(v, i); })
+                .Where([=](auto const& p) { return predicateWithIndex(p.first, p.second); }).Select([](auto const& p) { return p.first; });
         }
     };
 }

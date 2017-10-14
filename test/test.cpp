@@ -102,6 +102,12 @@ void test()
     if (!From(v).Select([](auto vi, auto i) { return vi; }).SequenceEqual(v))
         throw 25;
 
+    if (!From(v).Where([](auto vi, auto i) { return vi % 2 == 0; }).SequenceEqual(From(v).Where([](auto vi) { return vi % 2 == 0; })))
+        throw 26;
+
+    if (!From(v).Where([](auto vi, auto i) { return i < 3; }).SequenceEqual(From(v).Take(3)))
+        throw 27;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;
