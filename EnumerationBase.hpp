@@ -185,6 +185,11 @@ namespace Linqpp
         template <class Predicate> 
         auto SkipWhile(Predicate&& predicate) const { return From(Linqpp::SkipWhile(begin(), end(), std::forward<Predicate>(predicate)), end()); }
 
+        auto Sum() const { return Aggregate(std::plus<>()); }
+
+        template <class UnaryFunction>
+        auto Sum(UnaryFunction&& unaryFunction) const { return Select(std::forward<UnaryFunction>(unaryFunction)).Sum(); }
+
         auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
 
         auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }

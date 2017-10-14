@@ -42,6 +42,7 @@ namespace Linqpp
         void Increment() { ++_iterator; }
         void Decrement() { --_iterator; }
         difference_type Difference(SelectIterator const& other) const { return _iterator - other._iterator; }
+        void Move(difference_type n) { _iterator += n; }
     };
 
     template <class InputIterator, class UnaryFunction>

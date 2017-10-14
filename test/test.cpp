@@ -108,6 +108,12 @@ void test()
     if (!From(v).Where([](auto vi, auto i) { return i < 3; }).SequenceEqual(From(v).Take(3)))
         throw 27;
 
+    if (From(v).Sum() != 15)
+        throw 28;
+
+    if (From(v).Sum([](auto i) { return i * i; }) != 55)
+        throw 29;
+
     for (auto i : testYield().Concat(v))
         std::cout << i << " ";
     std::cout << std::endl;

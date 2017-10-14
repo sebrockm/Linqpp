@@ -44,6 +44,7 @@ namespace Linqpp
         void Increment() { ++_position; }
         void Decrement() { --_position; }
         difference_type Difference(OwningIterator const& other) const { return _position - other._position; }
+        void Move(difference_type n) { _position += n; }
     };
 
     template <class Iterator>
