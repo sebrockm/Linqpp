@@ -194,6 +194,21 @@ namespace Linqpp
 
         auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }
 
+        template <class Container>
+        auto Union(Container&& container) const { return Concat(std::forward<Container>(container)).Distinct(); }
+
+        template <class Container, class LessThanComparer>
+        auto Union(Container&& container, LessThanComparer&& comparer) const
+        {
+            return Concat(std::forward<Container>(container)).Distinct(std::forward<LessThanComparer>(comparer));
+        }
+
+        template <class Container, class EqualityComparer, class Hash>
+        auto Union(Container&& container, EqualityComparer&& comparer, Hash&& hash) const
+        {
+            return Concat(std::forward<Container>(container)).Distinct(std::forward<EqualityComparer>(comparer), std::forward<Hash>(hash));
+        }
+
         template <class Predicate>
         auto Where(Predicate&& predicate) const { return InternalWhere(std::forward<Predicate>(predicate), nullptr); }
 

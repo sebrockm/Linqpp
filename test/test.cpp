@@ -152,6 +152,9 @@ void test()
     std::cout << From(u).Distinct(std::less<>()).Count() << std::endl;
     std::cout << From(u).Distinct().Count() << std::endl;
 
+    std::list<int> w = { 5, -1, 4, 3, 1 };
+    std:: cout << From(w).Union(u).Count() << std::endl;
+
     struct A
     {
         int a;
@@ -164,7 +167,7 @@ void test()
     struct B
     {
         int b;
-        bool operator==(B b) const { return this->b < b.b; }
+        bool operator==(B b) const { return this->b == b.b; }
     };
 
     std::vector<B> vb = { B{2}, B{4}, B{1}, B{2}, B{1} };
