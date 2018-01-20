@@ -6,11 +6,11 @@ all: test readme
 %.o: %.cpp ../*.hpp
 	$(CC) $(CFLAGS) -c $<
 
-test: test.o
-	$(CC) $(CFLAGS) $< -o test.out
+test: test.o catch.o
+	$(CC) $(CFLAGS) $^ -o test.out
 
 readme: readme.o
-	$(CC) $(CFLAGS) $< -o readme.out
+	$(CC) $(CFLAGS) $^ -o readme.out
 
 runreadme: readme
 	./readme.out

@@ -4,12 +4,9 @@
 #include <forward_list>
 
 #include "Linqpp.hpp"
-
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 using namespace Linqpp;
-
 
 TEST_CASE("unit tests")
 {
