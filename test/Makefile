@@ -6,6 +6,9 @@ all: test readme
 %.o: %.cpp ../*.hpp
 	$(CC) $(CFLAGS) -c $<
 
+catch.o: catch.cpp catch.hpp
+	$(CC) $(CFLAGS) -c $<
+
 test: test.o catch.o
 	$(CC) $(CFLAGS) $^ -o test.out
 

@@ -16,14 +16,56 @@ namespace Linqpp
     namespace Yielding
     {
         template <class T>
-        struct ThreadData
+        class ThreadController
         {
+        private:
             std::mutex _mutex;
             std::condition_variable _cv;
             bool _threadIsExecuting = false;
             bool _finished = false;
             T _current;
             std::exception_ptr _spException;
+
+        public:
+            void WaitForHost()
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                while (!_threadIsExecuting)
+                    _cv.wait(lock);
+            }
+
+            void WaitForThread()
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                while (_threadIsExecuting)
+                    _cv.wait(lock);
+            }
+
+            void SwitchToHost()
+            {
+                _threadIsExecuting = false;
+                _cv.notify_all();
+            }
+
+            void SwitchToThread()
+            {
+                _threadIsExecuting = true;
+                _cv.notify_one();
+            }
+
+            T& GetValue() { return _current; }
+
+            void SetException(std::exception_ptr spException) { _spException = spException; }
+
+            void TryRethrow() const
+            {
+                if (_spException)
+                    std::rethrow_exception(_spException);
+            }
+
+            bool IsThreadFinished() const { return _finished; }
+            void FinishThread() { _finished = true; }
+
         };
 
         template <class T>
@@ -31,7 +73,7 @@ namespace Linqpp
         {
         private:
             std::shared_ptr<std::thread> _spThread;
-            std::shared_ptr<ThreadData<T>> _spThreadData;
+            std::shared_ptr<ThreadController<T>> _spThreadController;
             size_t _position;
             mutable bool _isIncrementDeferred = false;
 
@@ -43,8 +85,8 @@ namespace Linqpp
             using pointer = std::add_pointer_t<T>;
 
         public:
-            YieldingIterator(std::shared_ptr<std::thread> spThread, std::shared_ptr<ThreadData<T>> spThreadData)
-                : _spThread(std::move(spThread)), _spThreadData(std::move(spThreadData)), _position(0)
+            YieldingIterator(std::shared_ptr<std::thread> spThread, std::shared_ptr<ThreadController<T>> spThreadController)
+                : _spThread(std::move(spThread)), _spThreadController(std::move(spThreadController)), _position(0)
             {
                 Increment();
             }
@@ -59,65 +101,26 @@ namespace Linqpp
             YieldingIterator& operator=(YieldingIterator<T>&&) = default;
 
         public:
-            bool Equals(YieldingIterator<T> const& other) const
-            {
-                CatchUp();
-                other.CatchUp();
-                return _spThread == other._spThread && _position == other._position;
-            }
+            bool Equals(YieldingIterator<T> const& other) const { return _spThread == other._spThread && _position == other._position; }
 
-            reference Get() const
-            {
-                CatchUp();
-                return _spThreadData->_current;
-            }
+            reference Get() const { return _spThreadController->GetValue(); }
 
             void Increment()
             {
                 if (_position == std::numeric_limits<size_t>::max())
                     return;
 
-                if (!_isIncrementDeferred)
-                {
-                    _isIncrementDeferred = true;
-                    return;
-                }
+                _spThreadController->SwitchToThread();
+                _spThreadController->WaitForThread();
+                _spThreadController->TryRethrow();
 
-                {
-                    std::unique_lock<std::mutex> lock(_spThreadData->_mutex);
-                    _spThreadData->_threadIsExecuting = true;
-                }
-                _spThreadData->_cv.notify_one();
-                bool finished = false;
-                {
-                    std::unique_lock<std::mutex> lock(_spThreadData->_mutex);
-                    while (_spThreadData->_threadIsExecuting)
-                        _spThreadData->_cv.wait(lock);
-
-                    if (_spThreadData->_spException)
-                        std::rethrow_exception(_spThreadData->_spException);
-
-                    if (_spThreadData->_finished)
-                        finished = true;
-                    else
-                        ++_position;
-                }
-
-                if (finished)
+                if (!_spThreadController->IsThreadFinished())
+                    ++_position;
+                else
                 {
                     _position = std::numeric_limits<size_t>::max();
-                    _spThreadData = nullptr;
+                    _spThreadController = nullptr;
                     _spThread = nullptr;
-                }
-            }
-
-        private:
-            void CatchUp() const
-            {
-                if (_isIncrementDeferred)
-                {
-                    const_cast<YieldingIterator<T>*>(this)->Increment();
-                    _isIncrementDeferred = false;
                 }
             }
         };
@@ -126,35 +129,31 @@ namespace Linqpp
         class YieldingEnumeration : public EnumerationBase<YieldingIterator<T>>
         {
         private:
-            std::function<void(std::shared_ptr<ThreadData<T>>)> _function;
+            std::function<void(std::shared_ptr<ThreadController<T>>)> _function;
 
         public:
-            YieldingEnumeration(std::function<void(std::shared_ptr<ThreadData<T>>)> function)
+            YieldingEnumeration(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
                 : _function(std::move(function))
             { }
 
         public:
             virtual YieldingIterator<T> begin() const override
             {
-                auto spThreadData = std::make_shared<ThreadData<T>>();
-                auto spThread = std::shared_ptr<std::thread>(new std::thread(_function, spThreadData), [=](std::thread* pThread)
+                auto spThreadController = std::make_shared<ThreadController<T>>();
+                auto spThread = std::shared_ptr<std::thread>(new std::thread(_function, spThreadController), [=](std::thread* pThread)
                 {
                     if (pThread->joinable())
                         pThread->detach();
                     delete pThread;
 
-                    std::unique_lock<std::mutex> lock(spThreadData->_mutex);
-                    while (spThreadData->_threadIsExecuting)
-                        spThreadData->_cv.wait(lock);
-                    
-                    if (!spThreadData->_finished)
+                    spThreadController->WaitForThread();
+                    if (!spThreadController->IsThreadFinished())
                     {
-                        spThreadData->_threadIsExecuting = true;
-                        spThreadData->_finished = true;
-                        spThreadData->_cv.notify_one();
+                        spThreadController->FinishThread();
+                        spThreadController->SwitchToThread();
                     }
                 });
-                return YieldingIterator<T>(std::move(spThread), std::move(spThreadData));
+                return YieldingIterator<T>(std::move(spThread), std::move(spThreadController));
             }
 
             virtual YieldingIterator<T> end() const override
@@ -184,49 +183,32 @@ namespace Linqpp
 
 #define START_YIELDING(__type) \
     using __Type = __type; \
-    return Linqpp::Yielding::YieldingEnumeration<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadData<__Type>> __spThreadData) \
+    return Linqpp::Yielding::YieldingEnumeration<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) \
     { \
         auto __onExit = Linqpp::Yielding::on_exit([=] \
         { \
-            { \
-                std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
-                __spThreadData->_threadIsExecuting = false; \
-                __spThreadData->_finished = true; \
-            } \
-            __spThreadData->_cv.notify_all(); \
+            __spThreadController->FinishThread(); \
+            __spThreadController->SwitchToHost(); \
         }); \
         try \
         { \
-            { \
-                std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
-                while (!__spThreadData->_threadIsExecuting) \
-                    __spThreadData->_cv.wait(__lock); \
-                if (__spThreadData->_finished) \
-                    return; \
-            }
+            __spThreadController->WaitForHost(); \
+            if (__spThreadController->IsThreadFinished()) \
+                return; \
 
 #define yield_return(__value) \
             { \
-                { \
-                    std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
-                    __spThreadData->_current = (__value); \
-                    __spThreadData->_threadIsExecuting = false; \
-                } \
-                __spThreadData->_cv.notify_all(); \
-                { \
-                    std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
-                    while (!__spThreadData->_threadIsExecuting) \
-                        __spThreadData->_cv.wait(__lock); \
-                    if (__spThreadData->_finished) \
-                        return; \
-                } \
+                __spThreadController->GetValue() = (__value); \
+                __spThreadController->SwitchToHost(); \
+                __spThreadController->WaitForHost(); \
+                if (__spThreadController->IsThreadFinished()) \
+                    return; \
             }
 
 #define END_YIELDING \
         } \
         catch (...) \
         { \
-            std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
-            __spThreadData->_spException = std::current_exception(); \
+            __spThreadController->SetException(std::current_exception()); \
         } \
     });
