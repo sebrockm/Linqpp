@@ -3,7 +3,7 @@ CFLAGS = -std=c++14 -Wall -pedantic -O3 -pthread -I..
 
 all: test readme
 
-%.o: %.cpp ../*hpp
+%.o: %.cpp ../*.hpp
 	$(CC) $(CFLAGS) -c $<
 
 test: test.o

@@ -39,4 +39,22 @@ int main()
     for (auto p : example.Zip(l, [](auto d, auto i) { return d * i; }).Take(2))
         std::cout << p << " "; // 6.14 16.28
     std::cout << std::endl;
+
+    // Linqpp also provides an equivalent of C#'s yield return:
+
+    auto YieldExample = [] // Will return an enumeration structure that can be used with Linqpp
+    {
+        START_YIELDING(int) // Declare that you want to return ints
+
+        yield_return(1); // this is the equivalent of C#'s 'yield return 1;'
+        for (int i = 0 ; i < 5; ++i)
+            yield_return((i + 2) / 3); // you can use yield_return() in arbitrary code
+
+        END_YIELDING // end of yield block
+    }; // Here we used a lambda, but of course it works with 'normal' functions as well.
+
+    std::cout << "values created by a function using yield return:" << std::endl;
+    for (auto i : YieldExample().Distinct())
+        std::cout << i << " "; // 1 0 2
+    std::cout << std::endl;
 }

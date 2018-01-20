@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <forward_list>
 
 #include "Linqpp.hpp"
 
@@ -23,47 +24,91 @@ TEST_CASE("unit tests")
         bool operator==(B b) const { return this->b == b.b; }
     };
 
-    std::vector<int> u = { 1, 1, 2, 3, 3, 1, 2, 3, 4 };
-    std::vector<int> v = { 1,2,3,4,5 };
-    std::list<int> l = { 6,7,8,9 };
+    auto testYield = []()
+    {
+        START_YIELDING(int)
 
+        yield_return(-1);
+        for (int i = 0; i < 7; ++i)
+            yield_return(i);
+
+        END_YIELDING
+    };
+
+
+    std::vector<int> ran = { 1, 2, 3, 4, 5 };
+    std::list<int> bid = { 6, 7, 8, 9 };
+    std::forward_list<int> forw = { 3, 4, 5, 6, 7 };
+    auto inp = testYield();
+
+    std::vector<int> u = { 1, 1, 2, 3, 3, 1, 2, 3, 4 };
     std::vector<A> va = { A{1}, A{3}, A{3}, A{1} };
     std::vector<B> vb = { B{2}, B{4}, B{1}, B{2}, B{1} };
     
-
-
     SECTION("Aggregate")
     {
-        CHECK(From(v).Aggregate(std::plus<>()) == 15);
-        CHECK(Enumerable::Range(1, 10).Aggregate(std::string(""), [](auto s, auto j) { return s + ", " + std::to_string(j); })
-                == ", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10");
+        CHECK(From(ran).Aggregate(std::plus<>()) == 15);
+        CHECK(From(bid).Aggregate(std::plus<>()) == 30);
+        CHECK(From(forw).Aggregate(std::plus<>()) == 25);
+        CHECK(From(inp).Aggregate(std::plus<>()) == 20);
+        CHECK(Enumerable::Range(1, 10)
+                .Aggregate(std::string(""), [](auto s, auto j) { return s + ", " + std::to_string(j); }) == ", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10");
     }
 
     SECTION("All")
     {
-        CHECK_FALSE(From(v).All([](auto i) { return i < 4; }));
-        CHECK(From(v).All([](auto i) { return i < 10; }));
+        CHECK_FALSE(From(ran).All([](auto i) { return i < 4; }));
+        CHECK(From(ran).All([](auto i) { return i < 10; }));
+        CHECK_FALSE(From(bid).All([](auto i) { return i < 4; }));
+        CHECK(From(bid).All([](auto i) { return i < 10; }));
+        CHECK_FALSE(From(forw).All([](auto i) { return i < 4; }));
+        CHECK(From(forw).All([](auto i) { return i < 10; }));
+        CHECK_FALSE(From(inp).All([](auto i) { return i < 2; }));
+        CHECK(From(inp).All([](auto i) { return i < 10; }));
     }
 
     SECTION("Any")
     {
-        CHECK(From(v).Any());
-        CHECK(From(v).Any([](auto i) { return i == 4; }));
+        CHECK(From(ran).Any());
+        CHECK(From(ran).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(ran).Any([](auto i) { return i > 10; }));
+        CHECK(From(bid).Any());
+        CHECK(From(bid).Any([](auto i) { return i == 7; }));
+        CHECK_FALSE(From(bid).Any([](auto i) { return i > 10; }));
+        CHECK(From(forw).Any());
+        CHECK(From(forw).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(forw).Any([](auto i) { return i > 10; }));
+        CHECK(From(inp).Any());
+        CHECK(From(inp).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(inp).Any([](auto i) { return i > 10; }));
     }
 
     SECTION("Concat")
     {
-        int j = 1;
-        for (auto i : From(v).Concat(l))
-            CHECK(i == j++);
+        CHECK(From(ran).Concat(ran).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, 1, 2, 3, 4, 5}));
+        CHECK(From(ran).Concat(bid).SequenceEqual(Enumerable::Range(1, 9)));
+        CHECK(From(ran).Concat(forw).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, 3, 4, 5, 6, 7}));
+        CHECK(From(ran).Concat(inp).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, -1, 0, 1, 2, 3, 4, 5, 6}));
+        CHECK(From(bid).Concat(ran).SequenceEqual(std::vector<int>{6, 7, 8, 9, 1, 2, 3, 4, 5}));
+        CHECK(From(bid).Concat(bid).SequenceEqual(std::vector<int>{6, 7, 8, 9, 6, 7, 8, 9}));
+        CHECK(From(bid).Concat(forw).SequenceEqual(std::vector<int>{6, 7, 8, 9, 3, 4, 5, 6, 7}));
+        CHECK(From(bid).Concat(inp).SequenceEqual(std::vector<int>{6, 7, 8, 9, -1, 0, 1, 2, 3, 4, 5, 6}));
+        CHECK(From(forw).Concat(ran).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 1, 2, 3, 4, 5}));
+        CHECK(From(forw).Concat(bid).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 6, 7, 8, 9}));
+        CHECK(From(forw).Concat(forw).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 3, 4, 5, 6, 7}));
+        CHECK(From(forw).Concat(inp).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, -1, 0, 1, 2, 3, 4, 5, 6}));
+        CHECK(From(inp).Concat(ran).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5}));
+        CHECK(From(inp).Concat(bid).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 6, 7, 8, 9}));
+        CHECK(From(inp).Concat(forw).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7}));
+        CHECK(From(inp).Concat(inp).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, -1, 0, 1, 2, 3, 4, 5, 6}));
     }
 
     SECTION("Contains")
     {
-        CHECK(From(v).Contains(4));
-        CHECK_FALSE(From(v).Contains(7));
-        CHECK(From(l).Contains(7));
-        CHECK_FALSE(From(l).Contains(4));
+        CHECK(From(ran).Contains(4));
+        CHECK_FALSE(From(ran).Contains(7));
+        CHECK(From(bid).Contains(7));
+        CHECK_FALSE(From(bid).Contains(4));
     }
 
     SECTION("Distinct")
@@ -71,48 +116,47 @@ TEST_CASE("unit tests")
         std::vector<int> d = { 1, 2, 3, 4 };
 
         CHECK(From(u).Distinct().SequenceEqual(d));
-        CHECK(From(u).Distinct(std::less<>()).SequenceEqual(d));
-        CHECK(From(u).Distinct(std::equal_to<>(), std::hash<int>()).SequenceEqual(d));
+        CHECK(From(u).Distinct(std::less<>()).SequenceEqual(d)); CHECK(From(u).Distinct(std::equal_to<>(), std::hash<int>()).SequenceEqual(d));
         CHECK(From(va).Distinct().SequenceEqual(std::vector<A>{{1}, {3}}, [](auto a1, auto a2) { return a1.a == a2.a; }));
         CHECK(From(vb).Distinct().SequenceEqual(std::vector<B>{{2}, {4}, {1}}));
     }
 
     SECTION("ElementAt")
     {
-        CHECK(From(v).ElementAt(3) == 4);
-        CHECK(From(l).ElementAt(2) == 8);
-        CHECK(From(v).ElementAtOrDefault(-1) == 0);
-        CHECK(From(l).ElementAtOrDefault(10) == 0);
-        CHECK(From(v).ElementAtOrDefault(3) == 4);
-        CHECK(From(l).ElementAtOrDefault(2) == 8);
+        CHECK(From(ran).ElementAt(3) == 4);
+        CHECK(From(bid).ElementAt(2) == 8);
+        CHECK(From(ran).ElementAtOrDefault(-1) == 0);
+        CHECK(From(bid).ElementAtOrDefault(10) == 0);
+        CHECK(From(ran).ElementAtOrDefault(3) == 4);
+        CHECK(From(bid).ElementAtOrDefault(2) == 8);
     }
 
     SECTION("Empty")
     {
         CHECK_FALSE(Enumerable::Empty<std::vector<int>>().Any());
         CHECK(Enumerable::Empty<int>().DefaultIfEmpty(20).Count() == 1);
-        CHECK(From(v).DefaultIfEmpty().Count() == v.size());
+        CHECK(From(ran).DefaultIfEmpty().Count() == ran.size());
         CHECK(Enumerable::Empty<int>().DefaultIfEmpty(20).First() == 20);
     }
 
     SECTION("First")
     {
-        CHECK(From(v).First() == 1);
-        CHECK(From(v).Skip(23).FirstOrDefault() == 0);
+        CHECK(From(ran).First() == 1);
+        CHECK(From(ran).Skip(23).FirstOrDefault() == 0);
     }
 
     SECTION("Last")
     {
-        CHECK(From(v).Last() == 5);
-        CHECK(From(v).Skip(23).LastOrDefault() == 0);
+        CHECK(From(ran).Last() == 5);
+        CHECK(From(ran).Skip(23).LastOrDefault() == 0);
     }
 
     SECTION("MinMax")
     {
-        CHECK(From(v).Min() == 1);
-        CHECK(From(v).Max() == 5);
-        CHECK(From(v).Min(std::negate<>()) == -5);
-        CHECK(From(v).Max(std::negate<>()) == -1);
+        CHECK(From(ran).Min() == 1);
+        CHECK(From(ran).Max() == 5);
+        CHECK(From(ran).Min(std::negate<>()) == -5);
+        CHECK(From(ran).Max(std::negate<>()) == -1);
     }
 
     SECTION("OrderBy")
@@ -136,44 +180,44 @@ TEST_CASE("unit tests")
 
     SECTION("Reverse")
     {
-        CHECK(From(v).Reverse().SequenceEqual(std::vector<int>{5, 4, 3, 2, 1}));
+        CHECK(From(ran).Reverse().SequenceEqual(std::vector<int>{5, 4, 3, 2, 1}));
     }
 
     SECTION("Select")
     {
-        CHECK(From(v).Select([](auto vi, auto i) { return i; }).SequenceEqual(Enumerable::Range(0, From(v).Count())));
-        CHECK(From(v).Select([](auto vi, auto i) { return vi; }).SequenceEqual(v));
-        CHECK(From(v).Select([](auto i) { return '\'' + std::to_string(i) + '\''; }).SequenceEqual(std::vector<std::string>{"'1'", "'2'", "'3'", "'4'", "'5'"}));
+        CHECK(From(ran).Select([](auto vi, auto i) { return i; }).SequenceEqual(Enumerable::Range(0, From(ran).Count())));
+        CHECK(From(ran).Select([](auto vi, auto i) { return vi; }).SequenceEqual(ran));
+        CHECK(From(ran).Select([](auto i) { return '\'' + std::to_string(i) + '\''; }).SequenceEqual(std::vector<std::string>{"'1'", "'2'", "'3'", "'4'", "'5'"}));
     }
 
     SECTION("SequenceEqual")
     {
-        CHECK_FALSE(From(v).SequenceEqual(l));
-        CHECK(Enumerable::Range(1, 5).SequenceEqual(From(v)));
+        CHECK_FALSE(From(ran).SequenceEqual(bid));
+        CHECK(Enumerable::Range(1, 5).SequenceEqual(From(ran)));
     }
 
     SECTION("Skip")
     {
-        CHECK(From(v).Skip(3).Count() == v.size() - 3);
-        CHECK(From(v).Skip(6).Count() == 0);
+        CHECK(From(ran).Skip(3).Count() == ran.size() - 3);
+        CHECK(From(ran).Skip(6).Count() == 0);
     }
 
     SECTION("SkipWhile")
     {
-        CHECK(From(v).SkipWhile([](auto i) { return i < 4; }).Count() == 2);
-        CHECK(From(v).SkipWhile([](auto i, auto j) { return j < 4; }).First() == 5);
+        CHECK(From(ran).SkipWhile([](auto i) { return i < 4; }).Count() == 2);
+        CHECK(From(ran).SkipWhile([](auto i, auto j) { return j < 4; }).First() == 5);
     }
 
     SECTION("Sum")
     {
-        CHECK(From(v).Sum() == 15);
-        CHECK(From(v).Sum([](auto i) { return i * i; }) == 55);
+        CHECK(From(ran).Sum() == 15);
+        CHECK(From(ran).Sum([](auto i) { return i * i; }) == 55);
     }
 
     SECTION("Take")
     {
-        CHECK(From(v).Take(3).Count() == 3);
-        CHECK(From(v).Take(10).Count() == v.size());
+        CHECK(From(ran).Take(3).Count() == 3);
+        CHECK(From(ran).Take(10).Count() == ran.size());
     }
 
     SECTION("Union")
@@ -188,34 +232,33 @@ TEST_CASE("unit tests")
 
     SECTION("Where")
     {
-        CHECK(From(v).Where([](auto vi, auto i) { return vi % 2 == 0; }).SequenceEqual(From(v).Where([](auto vi) { return vi % 2 == 0; })));
-        CHECK(From(v).Where([](auto vi, auto i) { return i < 3; }).SequenceEqual(From(v).Take(3)));
-        CHECK(From(v).Where([](auto i) { return i % 2 == 0; }).SequenceEqual(std::vector<int>{2, 4}));
+        CHECK(From(ran).Where([](auto vi, auto i) { return vi % 2 == 0; }).SequenceEqual(From(ran).Where([](auto vi) { return vi % 2 == 0; })));
+        CHECK(From(ran).Where([](auto vi, auto i) { return i < 3; }).SequenceEqual(From(ran).Take(3)));
+        CHECK(From(ran).Where([](auto i) { return i % 2 == 0; }).SequenceEqual(std::vector<int>{2, 4}));
     }
 
     SECTION("Yield")
     {
-        auto testYield = []()
-        {
-            auto spYielder = Yielder<int>::Create();
-            spYielder->Start([=]()
-            {
-                spYielder->Yield(-17);
-                for (int i = 0; i < 17; ++i)
-                    spYielder->Yield(i);
-            });
-            return spYielder->Return();
-        };
-
-        CHECK(testYield().Count() == 18);
-        CHECK(testYield().SequenceEqual(Enumerable::Repeat(-17, 1).Concat(Enumerable::Range(0, 17))));
+        CHECK(testYield().Count() == 8);
+        CHECK(testYield().SequenceEqual(Enumerable::Range(-1, 8)));
         CHECK(testYield().SequenceEqual(testYield()));
         CHECK(testYield().Take(100).SequenceEqual(testYield()));
+
+        auto thrower = []
+        {
+            START_YIELDING(int)
+            yield_return(1);
+            yield_return(2);
+            throw 3;
+            END_YIELDING
+        };
+
+        CHECK_THROWS_AS(thrower().Count(), int);
     }
 
     SECTION("Zip")
     {
-        CHECK(From(v).Take(4).Zip(l, [](auto i, auto j) { return std::make_pair(i, j); })
+        CHECK(From(ran).Take(4).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
                 .SequenceEqual(std::vector<std::pair<int, int>>{{1, 6}, {2, 7}, {3, 8}, {4, 9}}));
     }
 }

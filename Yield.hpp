@@ -1,37 +1,39 @@
 #pragma once
 
-#include "From.hpp"
-#include "IteratorAdapter.hpp"
-
-#include <memory>
-#include <future>
 #include <condition_variable>
-#include <queue>
+#include <exception>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <limits>
+#include <thread>
+
+#include "EnumerationBase.hpp"
+#include "IteratorAdapter.hpp"
 
 namespace Linqpp
 {
-    template <class T, size_t MaxBufferSize = 100>
-    class Yielder : public std::enable_shared_from_this<Yielder<T, MaxBufferSize>>
+    namespace Yielding
     {
-    private:
-        std::future<void> _generator;
-        std::condition_variable _cv;
-        std::mutex _mutex;
-        std::queue<T> _buffer;
-        bool _startedGenerating = false;
-        bool _finishedGenerating = false;
-        bool _destructorCalled = false;
+        template <class T>
+        struct ThreadData
+        {
+            std::mutex _mutex;
+            std::condition_variable _cv;
+            bool _threadIsExecuting = false;
+            bool _finished = false;
+            T _current;
+            std::exception_ptr _spException;
+        };
 
-    private:
-        Yielder() = default;
-        Yielder(Yielder const&) = delete;
-        Yielder& operator=(Yielder const&) = delete;
-
-        class Iterator : public IteratorAdapter<Iterator>
+        template <class T>
+        class YieldingIterator : public IteratorAdapter<YieldingIterator<T>>
         {
         private:
-            std::shared_ptr<Yielder> _spYielder;
-            bool _isEnd;
+            std::shared_ptr<std::thread> _spThread;
+            std::shared_ptr<ThreadData<T>> _spThreadData;
+            size_t _position;
+            mutable bool _isIncrementDeferred = false;
 
         public:
             using iterator_category = std::input_iterator_tag;
@@ -41,88 +43,190 @@ namespace Linqpp
             using pointer = std::add_pointer_t<T>;
 
         public:
-            Iterator() : _isEnd(true) { };
-            Iterator(std::shared_ptr<Yielder> const& spYielder) : _spYielder(spYielder), _isEnd(false) { Increment(); }
-            Iterator(Iterator const&) = default;
-            Iterator(Iterator&&) = default;
-            Iterator& operator=(Iterator const&) = default;
-            Iterator& operator=(Iterator&&) = default;
+            YieldingIterator(std::shared_ptr<std::thread> spThread, std::shared_ptr<ThreadData<T>> spThreadData)
+                : _spThread(std::move(spThread)), _spThreadData(std::move(spThreadData)), _position(0)
+            {
+                Increment();
+            }
+
+            YieldingIterator()
+                : _position(std::numeric_limits<size_t>::max())
+            { }
+
+            YieldingIterator(YieldingIterator<T> const&) = default;
+            YieldingIterator(YieldingIterator<T>&&) = default;
+            YieldingIterator& operator=(YieldingIterator<T> const&) = default;
+            YieldingIterator& operator=(YieldingIterator<T>&&) = default;
 
         public:
-            bool Equals(Iterator const& other) const { return _isEnd == other._isEnd; }
+            bool Equals(YieldingIterator<T> const& other) const
+            {
+                CatchUp();
+                other.CatchUp();
+                return _spThread == other._spThread && _position == other._position;
+            }
 
             reference Get() const
             {
-                std::unique_lock<std::mutex> lock(_spYielder->_mutex);
-                return _spYielder->_buffer.front();
+                CatchUp();
+                return _spThreadData->_current;
             }
 
             void Increment()
             {
-                {
-                    std::unique_lock<std::mutex> lock(_spYielder->_mutex);
-                    if (!_spYielder->_buffer.empty()) // should be empty only in the very first call of Advance
-                        _spYielder->_buffer.pop();
-                    _spYielder->_cv.wait(lock, [=]() { return _spYielder->_finishedGenerating || !_spYielder->_buffer.empty(); });
+                if (_position == std::numeric_limits<size_t>::max())
+                    return;
 
-                    if (_spYielder->_buffer.empty())
-                        _isEnd = true;
+                if (!_isIncrementDeferred)
+                {
+                    _isIncrementDeferred = true;
+                    return;
                 }
-                _spYielder->_cv.notify_all();
+
+                {
+                    std::unique_lock<std::mutex> lock(_spThreadData->_mutex);
+                    _spThreadData->_threadIsExecuting = true;
+                }
+                _spThreadData->_cv.notify_one();
+                bool finished = false;
+                {
+                    std::unique_lock<std::mutex> lock(_spThreadData->_mutex);
+                    while (_spThreadData->_threadIsExecuting)
+                        _spThreadData->_cv.wait(lock);
+
+                    if (_spThreadData->_spException)
+                        std::rethrow_exception(_spThreadData->_spException);
+
+                    if (_spThreadData->_finished)
+                        finished = true;
+                    else
+                        ++_position;
+                }
+
+                if (finished)
+                {
+                    _position = std::numeric_limits<size_t>::max();
+                    _spThreadData = nullptr;
+                    _spThread = nullptr;
+                }
+            }
+
+        private:
+            void CatchUp() const
+            {
+                if (_isIncrementDeferred)
+                {
+                    const_cast<YieldingIterator<T>*>(this)->Increment();
+                    _isIncrementDeferred = false;
+                }
             }
         };
 
-        friend class Iterator;
-
-        class ThreadEndException { };
-
-    public:
-        ~Yielder()
+        template <class T>
+        class YieldingEnumeration : public EnumerationBase<YieldingIterator<T>>
         {
-            _destructorCalled = true;
-            _cv.notify_all();
-            _generator.wait();
-        }
+        private:
+            std::function<void(std::shared_ptr<ThreadData<T>>)> _function;
 
-        template <class _T>
-        void Yield(_T&& t)
-        {
+        public:
+            YieldingEnumeration(std::function<void(std::shared_ptr<ThreadData<T>>)> function)
+                : _function(std::move(function))
+            { }
+
+        public:
+            virtual YieldingIterator<T> begin() const override
             {
-                std::unique_lock<std::mutex> lock(_mutex);
-                _cv.wait(lock, [=]() { return _buffer.size() < MaxBufferSize || _destructorCalled; });
-
-                if (_destructorCalled)
-                    throw ThreadEndException();
-
-                _buffer.push(std::forward<_T>(t));
-            }
-            _cv.notify_all();
-        }
-
-        template <class Generator>
-        void Start(Generator generator)
-        {
-            _generator = std::async(std::launch::async, [=]()
-            {
-                try
+                auto spThreadData = std::make_shared<ThreadData<T>>();
+                auto spThread = std::shared_ptr<std::thread>(new std::thread(_function, spThreadData), [=](std::thread* pThread)
                 {
-                    generator();
-                }
-                catch (ThreadEndException) { }
-                _finishedGenerating = true;
-                _cv.notify_all();
-            });
-            _startedGenerating = true;
-        }
+                    if (pThread->joinable())
+                        pThread->detach();
+                    delete pThread;
 
-        auto Return()
+                    std::unique_lock<std::mutex> lock(spThreadData->_mutex);
+                    while (spThreadData->_threadIsExecuting)
+                        spThreadData->_cv.wait(lock);
+                    
+                    if (!spThreadData->_finished)
+                    {
+                        spThreadData->_threadIsExecuting = true;
+                        spThreadData->_finished = true;
+                        spThreadData->_cv.notify_one();
+                    }
+                });
+                return YieldingIterator<T>(std::move(spThread), std::move(spThreadData));
+            }
+
+            virtual YieldingIterator<T> end() const override
+            {
+                return YieldingIterator<T>();
+            }
+        };
+
+        template <class Function>
+        class OnExit
         {
-            while (!_startedGenerating);
+        private:
+            Function _function;
 
-            return From(Iterator(this->shared_from_this()), Iterator());
-        }
+        public:
+            OnExit(Function const& function)
+                : _function(function)
+            { }
 
-    public:
-        static auto Create() { return std::shared_ptr<Yielder>(new Yielder()); }
-    };
+            ~OnExit() { _function(); }
+        };
+
+        template <class Function>
+        auto on_exit(Function&& function) { return OnExit<Function>(std::forward<Function>(function)); }
+    }
 }
+
+#define START_YIELDING(__type) \
+    using __Type = __type; \
+    return Linqpp::Yielding::YieldingEnumeration<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadData<__Type>> __spThreadData) \
+    { \
+        auto __onExit = Linqpp::Yielding::on_exit([=] \
+        { \
+            { \
+                std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
+                __spThreadData->_threadIsExecuting = false; \
+                __spThreadData->_finished = true; \
+            } \
+            __spThreadData->_cv.notify_all(); \
+        }); \
+        try \
+        { \
+            { \
+                std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
+                while (!__spThreadData->_threadIsExecuting) \
+                    __spThreadData->_cv.wait(__lock); \
+                if (__spThreadData->_finished) \
+                    return; \
+            }
+
+#define yield_return(__value) \
+            { \
+                { \
+                    std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
+                    __spThreadData->_current = (__value); \
+                    __spThreadData->_threadIsExecuting = false; \
+                } \
+                __spThreadData->_cv.notify_all(); \
+                { \
+                    std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
+                    while (!__spThreadData->_threadIsExecuting) \
+                        __spThreadData->_cv.wait(__lock); \
+                    if (__spThreadData->_finished) \
+                        return; \
+                } \
+            }
+
+#define END_YIELDING \
+        } \
+        catch (...) \
+        { \
+            std::unique_lock<std::mutex> __lock(__spThreadData->_mutex); \
+            __spThreadData->_spException = std::current_exception(); \
+        } \
+    });
