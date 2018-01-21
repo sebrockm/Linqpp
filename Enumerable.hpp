@@ -18,12 +18,14 @@ namespace Linqpp
 #include "From.hpp"
 #include "IntIterator.hpp"
 
+#include <array>
+
 namespace Linqpp
 {
     template <class T>
     auto Enumerable::Empty()
     {
-        return Range(0, 0).Select([](auto const&) { return *(T*)nullptr; }).ToVector();
+        return ExtendingEnumeration<std::array<T, 0>>();
     }
 
     template <class Int1, class Int2>
@@ -35,6 +37,12 @@ namespace Linqpp
     template <class T>
     auto Enumerable::Repeat(T t, size_t n)
     {
-        return Range((size_t)0, n).Select([=](auto const&) { return t; });
+        struct A
+        {
+            T _t;
+            T operator()(size_t) const { return _t; }
+        };
+        return Range((size_t)0, n).Select(A{t}/*[=](size_t) mutable { return t; }*/);
+        // FIXME: lambda is not copiable 
     }
 }

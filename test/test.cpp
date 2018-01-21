@@ -97,6 +97,34 @@ TEST_CASE("unit tests")
         CHECK_FALSE(From(inp).Any([](auto i) { return i > 10; }));
     }
 
+    SECTION("Average")
+    {
+        CHECK(From(ran).Average() == Approx(3));
+        CHECK(From(bid).Average() == Approx(7.5));
+        CHECK(From(forw).Average() == Approx(5));
+        CHECK(inp.Average() == Approx(2.5));
+
+        long long n = 1'000'000;
+        CHECK(Enumerable::Range(1, n).Average() == Approx((n + 1) / 2.0));
+        CHECK(Enumerable::Range(0, n).Average() == Approx((n - 1) / 2.0));
+        CHECK(Enumerable::Range(1, n).Reverse().Average() == Approx((n + 1) / 2.0));
+        CHECK(Enumerable::Range(0, n).Reverse().Average() == Approx((n - 1) / 2.0));
+
+        n *= 100;
+        CHECK(Enumerable::Range(1, n).Average() == Approx((n + 1) / 2.0));
+        CHECK(Enumerable::Range(0, n).Average() == Approx((n - 1) / 2.0));
+        CHECK(Enumerable::Range(1, n).Reverse().Average() == Approx((n + 1) / 2.0));
+        CHECK(Enumerable::Range(0, n).Reverse().Average() == Approx((n - 1) / 2.0));
+
+        auto smallAndBig = Enumerable::Repeat(0.001, n).Concat(Enumerable::Repeat(n / 1'000.0, 1));
+        auto avg = Approx(n / 500.0 / (n + 1));
+        CHECK(smallAndBig.Average() == avg);
+        CHECK(smallAndBig.Reverse().Average() == avg);
+
+        CHECK(Enumerable::Repeat(std::numeric_limits<double>::max() / 2, 100).Average() == Approx(std::numeric_limits<double>::max() / 2));
+        CHECK(Enumerable::Repeat(std::numeric_limits<double>::min() / 2, 100).Average() == Approx(std::numeric_limits<double>::min() / 2));
+    }
+
     SECTION("Concat")
     {
         CHECK(From(ran).Concat(ran).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, 1, 2, 3, 4, 5}));

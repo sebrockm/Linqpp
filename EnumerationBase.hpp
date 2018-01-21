@@ -70,6 +70,21 @@ namespace Linqpp
         template <class Predicate> 
         bool All(Predicate&& predicate) const { return std::all_of(begin(), end(), std::forward<Predicate>(predicate)); }
 
+        auto Average() const
+        {
+            auto avg = First() * 1.0;
+            size_t n = 1;
+            for (auto const& i : Skip(1))
+            {
+                avg *= (double)n;
+                ++n;
+                avg /= (double)n;
+                avg += i / (double)n;
+            }
+
+            return avg;
+        }
+
         template <class Container>
         auto Concat(Container&& container) const
         {
