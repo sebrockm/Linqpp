@@ -48,8 +48,18 @@ TEST_CASE("unit tests")
         CHECK(From(bid).Aggregate(std::plus<>()) == 30);
         CHECK(From(forw).Aggregate(std::plus<>()) == 25);
         CHECK(From(inp).Aggregate(std::plus<>()) == 20);
-        CHECK(Enumerable::Range(1, 10)
-                .Aggregate(std::string(""), [](auto s, auto j) { return s + ", " + std::to_string(j); }) == ", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10");
+
+        auto plus = [](std::string s, int i) { return s + std::to_string(i); };
+        CHECK(From(ran).Aggregate(std::string(""), plus) == "12345");
+        CHECK(From(bid).Aggregate(std::string(""), plus) == "6789");
+        CHECK(From(forw).Aggregate(std::string(""), plus) == "34567");
+        CHECK(From(inp).Aggregate(std::string(""), plus) == "-10123456");
+
+        auto to_int = [](std::string s) { return std::stoi(s); };
+        CHECK(From(ran).Aggregate(std::string(""), plus, to_int) == 12345);
+        CHECK(From(bid).Aggregate(std::string(""), plus, to_int) == 6789);
+        CHECK(From(forw).Aggregate(std::string(""), plus, to_int) == 34567);
+        CHECK(From(inp).Aggregate(std::string(""), plus, to_int) == -10123456);
     }
 
     SECTION("All")

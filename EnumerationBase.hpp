@@ -43,17 +43,23 @@ namespace Linqpp
         virtual InputIterator end() const = 0;
 
     public:
+        template <class BinaryFunction>
+        auto Aggregate(BinaryFunction&& binaryFunction) const
+        {
+            decltype(auto) first = First();
+            return std::accumulate(std::next(begin()), end(), first, std::forward<BinaryFunction>(binaryFunction));
+        }
+
         template <class Seed, class BinaryFunction>
         auto Aggregate(Seed const& seed, BinaryFunction&& binaryFunction) const
         {
             return std::accumulate(begin(), end(), seed, std::forward<BinaryFunction>(binaryFunction));
         }
 
-        template <class BinaryFunction>
-        auto Aggregate(BinaryFunction&& binaryFunction) const
+        template <class Seed, class BinaryFunction, class ResultSelector>
+        auto Aggregate(Seed const& seed, BinaryFunction&& binaryFunction, ResultSelector&& resultSelector) const
         {
-            decltype(auto) first = First();
-            return std::accumulate(std::next(begin()), end(), first, std::forward<BinaryFunction>(binaryFunction));
+            return std::forward<ResultSelector>(resultSelector)(Aggregate(seed, std::forward<BinaryFunction>(binaryFunction)));
         }
 
         bool Any() const { return begin() != end(); }
