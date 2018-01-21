@@ -78,15 +78,22 @@ TEST_CASE("unit tests")
     {
         CHECK(From(ran).Any());
         CHECK(From(ran).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(ran).Take(0).Any());
         CHECK_FALSE(From(ran).Any([](auto i) { return i > 10; }));
+
         CHECK(From(bid).Any());
         CHECK(From(bid).Any([](auto i) { return i == 7; }));
+        CHECK_FALSE(From(bid).Take(0).Any());
         CHECK_FALSE(From(bid).Any([](auto i) { return i > 10; }));
+
         CHECK(From(forw).Any());
         CHECK(From(forw).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(forw).Take(0).Any());
         CHECK_FALSE(From(forw).Any([](auto i) { return i > 10; }));
+
         CHECK(From(inp).Any());
         CHECK(From(inp).Any([](auto i) { return i == 4; }));
+        CHECK_FALSE(From(inp).Take(0).Any());
         CHECK_FALSE(From(inp).Any([](auto i) { return i > 10; }));
     }
 
@@ -96,14 +103,17 @@ TEST_CASE("unit tests")
         CHECK(From(ran).Concat(bid).SequenceEqual(Enumerable::Range(1, 9)));
         CHECK(From(ran).Concat(forw).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, 3, 4, 5, 6, 7}));
         CHECK(From(ran).Concat(inp).SequenceEqual(std::vector<int>{1, 2, 3, 4, 5, -1, 0, 1, 2, 3, 4, 5, 6}));
+
         CHECK(From(bid).Concat(ran).SequenceEqual(std::vector<int>{6, 7, 8, 9, 1, 2, 3, 4, 5}));
         CHECK(From(bid).Concat(bid).SequenceEqual(std::vector<int>{6, 7, 8, 9, 6, 7, 8, 9}));
         CHECK(From(bid).Concat(forw).SequenceEqual(std::vector<int>{6, 7, 8, 9, 3, 4, 5, 6, 7}));
         CHECK(From(bid).Concat(inp).SequenceEqual(std::vector<int>{6, 7, 8, 9, -1, 0, 1, 2, 3, 4, 5, 6}));
+
         CHECK(From(forw).Concat(ran).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 1, 2, 3, 4, 5}));
         CHECK(From(forw).Concat(bid).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 6, 7, 8, 9}));
         CHECK(From(forw).Concat(forw).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, 3, 4, 5, 6, 7}));
         CHECK(From(forw).Concat(inp).SequenceEqual(std::vector<int>{3, 4, 5, 6, 7, -1, 0, 1, 2, 3, 4, 5, 6}));
+
         CHECK(From(inp).Concat(ran).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5}));
         CHECK(From(inp).Concat(bid).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 6, 7, 8, 9}));
         CHECK(From(inp).Concat(forw).SequenceEqual(std::vector<int>{-1, 0, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7}));
