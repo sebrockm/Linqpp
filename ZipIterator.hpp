@@ -37,8 +37,12 @@ namespace Linqpp
         ZipIterator() = default;
         ZipIterator(ZipIterator const&) = default;
         ZipIterator(ZipIterator&&) = default;
-        ZipIterator& operator=(ZipIterator const&) = default;
-        ZipIterator& operator=(ZipIterator&&) = default;
+
+        ZipIterator& operator=(ZipIterator other)
+        {
+            Swap(*this, other, std::is_copy_assignable<BinaryFunction>());
+            return *this;
+        }
 
     // IteratorAdapter
     public:
@@ -49,11 +53,27 @@ namespace Linqpp
         void Decrement() { --_iterator1; --_iterator2; }
         difference_type Difference(ZipIterator const& other) const { return _iterator1 - other._iterator1; }
         void Move(difference_type n) { _iterator1 += n; _iterator2 += n; }
+
+    // Internals
+    private:
+        static void Swap(ZipIterator& iterator1, ZipIterator& iterator2, std::true_type)
+        {
+            Swap(iterator1, iterator2, std::false_type());
+            std::swap(iterator1._function, iterator2._function);
+        }
+
+        static void Swap(ZipIterator& iterator1, ZipIterator& iterator2, std::false_type)
+        {
+            std::swap(iterator1._iterator1, iterator2._iterator1);
+            std::swap(iterator1._iterator2, iterator2._iterator2);
+        }
     };
 
     template <class InputIterator1, class InputIterator2, class BinaryFunction>
     auto CreateZipIterator(InputIterator1 iterator1, InputIterator2 iterator2, BinaryFunction&& function)
     {
+        static_assert(std::is_copy_assignable<ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>>::value, "ZipIterator is not copy assignable.");
+        static_assert(std::is_move_assignable<ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>>::value, "ZipIterator is not move assignable.");
         return ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>(iterator1, iterator2, std::forward<BinaryFunction>(function));
     }
 }

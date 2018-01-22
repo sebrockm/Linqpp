@@ -153,6 +153,8 @@ namespace Linqpp
                         spThreadController->SwitchToThread();
                     }
                 });
+                static_assert(std::is_copy_assignable<YieldingIterator<T>>::value, "YieldingIterator is not copy assignable.");
+                static_assert(std::is_move_assignable<YieldingIterator<T>>::value, "YieldingIterator is not move assignable.");
                 return YieldingIterator<T>(std::move(spThread), std::move(spThreadController));
             }
 

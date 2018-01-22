@@ -25,9 +25,9 @@ namespace Linqpp
 
     // Fields
     private:
-        const InputIterator _first;
-        const InputIterator _last;
-        const std::shared_ptr<Vector> _spData = std::make_shared<Vector>();
+        InputIterator _first;
+        InputIterator _last;
+        std::shared_ptr<Vector> _spData = std::make_shared<Vector>();
         size_t _position = 0;
         LessThanComparer _comparer;
 
@@ -40,8 +40,12 @@ namespace Linqpp
         SortingIterator() = default;
         SortingIterator(SortingIterator const&) = default;
         SortingIterator(SortingIterator&&) = default;
-        SortingIterator& operator=(SortingIterator const&) = default;
-        SortingIterator& operator=(SortingIterator&&) = default;
+
+        SortingIterator& operator=(SortingIterator other)
+        {
+            Swap(*this, other, std::is_copy_assignable<LessThanComparer>());
+            return *this;
+        }
 
     // IteratorAdapter
     public:
@@ -62,11 +66,27 @@ namespace Linqpp
             _spData->assign(_first, _last);
             std::sort(_spData->begin(), _spData->end(), _comparer);
         }
+
+        static void Swap(SortingIterator& iterator1, SortingIterator& iterator2, std::true_type)
+        {
+            Swap(iterator1, iterator2, std::false_type());
+            std::swap(iterator1._comparer, iterator2._comparer);
+        }
+
+        static void Swap(SortingIterator& iterator1, SortingIterator& iterator2, std::false_type)
+        {
+            std::swap(iterator1._first, iterator2._first);
+            std::swap(iterator1._last, iterator2._last);
+            std::swap(iterator1._spData, iterator2._spData);
+            std::swap(iterator1._position, iterator2._position);
+        }
     };
 
     template <class InputIterator, class LessThanComparer>
     auto CreateSortedEnumeration(InputIterator first, InputIterator last, LessThanComparer&& comparer)
     {
+        static_assert(std::is_copy_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not copy assignable.");
+        static_assert(std::is_move_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not move assignable.");
         auto firstSorted = SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>(first, last, std::forward<LessThanComparer>(comparer));
         return From(firstSorted, firstSorted + From(first, last).Count());
     }

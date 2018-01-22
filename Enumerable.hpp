@@ -37,12 +37,6 @@ namespace Linqpp
     template <class T>
     auto Enumerable::Repeat(T t, size_t n)
     {
-        struct A
-        {
-            T _t;
-            T operator()(size_t) const { return _t; }
-        };
-        return Range((size_t)0, n).Select(A{t}/*[=](size_t) mutable { return t; }*/);
-        // FIXME: lambda is not copiable 
+        return Range((size_t)0, n).Select([=](size_t) { return t; });
     }
 }

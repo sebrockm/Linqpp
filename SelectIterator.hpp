@@ -31,8 +31,12 @@ namespace Linqpp
         SelectIterator() = default;
         SelectIterator(SelectIterator const&) = default;
         SelectIterator(SelectIterator&&) = default;
-        SelectIterator& operator=(SelectIterator const&) = default;
-        SelectIterator& operator=(SelectIterator&&) = default;
+
+        SelectIterator& operator=(SelectIterator other)
+        {
+            Swap(*this, other, std::is_copy_assignable<UnaryFunction>());
+            return *this;
+        }
 
     // IteratorAdapter
     public:
@@ -43,11 +47,26 @@ namespace Linqpp
         void Decrement() { --_iterator; }
         difference_type Difference(SelectIterator const& other) const { return _iterator - other._iterator; }
         void Move(difference_type n) { _iterator += n; }
+
+    // Internals
+    private:
+        static void Swap(SelectIterator& iterator1, SelectIterator& iterator2, std::true_type)
+        {
+            std::swap(iterator1._iterator, iterator2._iterator);
+            std::swap(iterator1._function, iterator2._function);
+        }
+
+        static void Swap(SelectIterator& iterator1, SelectIterator& iterator2, std::false_type)
+        {
+            std::swap(iterator1._iterator, iterator2._iterator);
+        }
     };
 
     template <class InputIterator, class UnaryFunction>
     auto CreateSelectIterator(InputIterator iterator, UnaryFunction&& function)
     {
+        static_assert(std::is_copy_assignable<SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>>::value, "SelectIterator is not copy assignable.");
+        static_assert(std::is_move_assignable<SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>>::value, "SelectIterator is not move assignable.");
         return SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>(iterator, std::forward<UnaryFunction>(function));
     }
 }

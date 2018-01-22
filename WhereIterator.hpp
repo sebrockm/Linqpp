@@ -10,7 +10,7 @@ namespace Linqpp
     // Fields
     private:
         InputIterator _first;
-        const InputIterator _last;
+        InputIterator _last;
         Predicate _predicate;
 
     public:
@@ -31,8 +31,12 @@ namespace Linqpp
         WhereIterator() = default;
         WhereIterator(WhereIterator const&) = default;
         WhereIterator(WhereIterator&&) = default;
-        WhereIterator& operator=(WhereIterator const&) = default;
-        WhereIterator& operator=(WhereIterator&&) = default;
+
+        WhereIterator& operator=(WhereIterator other)
+        {
+            Swap(*this, other, std::is_copy_assignable<Predicate>());
+            return *this;
+        }
 
     // IteratorAdapter
     public:
@@ -54,11 +58,25 @@ namespace Linqpp
             while (!_predicate(*_first))
                 --_first;
         }
+
+        static void Swap(WhereIterator& iterator1, WhereIterator& iterator2, std::true_type)
+        {
+            Swap(iterator1, iterator2, std::false_type());
+            std::swap(iterator1._predicate, iterator2._predicate);
+        }
+
+        static void Swap(WhereIterator& iterator1, WhereIterator& iterator2, std::false_type)
+        {
+            std::swap(iterator1._first, iterator2._first);
+            std::swap(iterator1._last, iterator2._last);
+        }
     };
 
     template <class InputIterator, class Predicate>
     auto CreateWhereIterator(InputIterator first, InputIterator last, Predicate&& predicate)
     {
+        static_assert(std::is_copy_assignable<WhereIterator<InputIterator, std::remove_reference_t<Predicate>>>::value, "WhereIterator is not copy assignable.");
+        static_assert(std::is_move_assignable<WhereIterator<InputIterator, std::remove_reference_t<Predicate>>>::value, "WhereIterator is not move assignable.");
         return WhereIterator<InputIterator, std::remove_reference_t<Predicate>>(first, last, std::forward<Predicate>(predicate));
     }
 }

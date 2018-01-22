@@ -85,6 +85,8 @@ namespace Linqpp
     template <class Iterator1, class Iterator2>
     auto CreateConcatIterator(Iterator1 current1, Iterator1 last1, Iterator2 first2, Iterator2 current2)
     {
+        static_assert(std::is_copy_assignable<ConcatIterator<Iterator1, Iterator2>>::value, "ConcatIterator is not copy assignable.");
+        static_assert(std::is_move_assignable<ConcatIterator<Iterator1, Iterator2>>::value, "ConcatIterator is not move assignable.");
         return ConcatIterator<Iterator1, Iterator2>(current1, last1, first2, current2);
     }
 }

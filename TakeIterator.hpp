@@ -56,6 +56,8 @@ namespace Linqpp
         auto InternalGetEnumeratorFromTake(InputIterator first, size_t n, InputIterator last, std::input_iterator_tag)
         {
             using Category = typename std::iterator_traits<InputIterator>::iterator_category;
+            static_assert(std::is_copy_assignable<TakeIterator<InputIterator, Category>>::value, "TakeIterator is not copy assignable.");
+            static_assert(std::is_move_assignable<TakeIterator<InputIterator, Category>>::value, "TakeIterator is not move assignable.");
             return From(TakeIterator<InputIterator, Category>(first, 0, last), TakeIterator<InputIterator, Category>(last, n, last));
         }
     }
