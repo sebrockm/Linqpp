@@ -136,6 +136,11 @@ namespace Linqpp
                 : _function(std::move(function))
             { }
 
+            YieldingEnumeration(YieldingEnumeration const&) = default;
+            YieldingEnumeration(YieldingEnumeration&&) = default;
+            YieldingEnumeration& operator=(YieldingEnumeration const&) = default;
+            YieldingEnumeration& operator=(YieldingEnumeration&&) = default;
+
         public:
             virtual YieldingIterator<T> begin() const override
             {

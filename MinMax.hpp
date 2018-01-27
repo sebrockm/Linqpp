@@ -14,7 +14,7 @@ namespace Linqpp
         decltype(auto) InternalMin(ForwardIterator first, ForwardIterator last, std::forward_iterator_tag) { return *std::min_element(first, last); }
 
         template <class InputIterator>
-        decltype(auto) InternalMax(InputIterator first, InputIterator last, std::input_iterator_tag)
+        auto InternalMax(InputIterator first, InputIterator last, std::input_iterator_tag)
         {
             if (first == last)
                 return *first;
@@ -31,7 +31,7 @@ namespace Linqpp
         }
 
         template <class InputIterator>
-        decltype(auto) InternalMin(InputIterator first, InputIterator last, std::input_iterator_tag)
+        auto InternalMin(InputIterator first, InputIterator last, std::input_iterator_tag)
         {
             if (first == last)
                 return *first;
