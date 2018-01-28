@@ -8,11 +8,17 @@ namespace Linqpp
     class IteratorEnumeration : public EnumerationBase<InputIterator>
     {
     private:
-        const InputIterator _first;
-        const InputIterator _last;
+        InputIterator _first;
+        InputIterator _last;
 
     public:
         IteratorEnumeration(InputIterator first, InputIterator last) : _first(first), _last(last) { }
+
+        IteratorEnumeration() = default;
+        IteratorEnumeration(IteratorEnumeration const&) = default;
+        IteratorEnumeration(IteratorEnumeration&&) = default;
+        IteratorEnumeration& operator=(IteratorEnumeration const&) = default;
+        IteratorEnumeration& operator=(IteratorEnumeration&&) = default;
 
     public:
         virtual InputIterator begin() const override { return _first; }

@@ -86,7 +86,7 @@ namespace Linqpp
     auto CreateSortedEnumeration(InputIterator first, InputIterator last, LessThanComparer&& comparer)
     {
         static_assert(std::is_copy_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not copy assignable.");
-        static_assert(std::is_move_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not move assignable.");
+
         auto firstSorted = SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>(first, last, std::forward<LessThanComparer>(comparer));
         return From(firstSorted, firstSorted + From(first, last).Count());
     }

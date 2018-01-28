@@ -9,7 +9,8 @@
 #include <thread>
 
 #include "EnumerationBase.hpp"
-#include "IteratorAdapter.hpp"
+#include "Iterator/YieldingIterator.hpp"
+#include "Utility.hpp"
 
 namespace Linqpp
 {
@@ -69,63 +70,6 @@ namespace Linqpp
         };
 
         template <class T>
-        class YieldingIterator : public IteratorAdapter<YieldingIterator<T>>
-        {
-        private:
-            std::shared_ptr<std::thread> _spThread;
-            std::shared_ptr<ThreadController<T>> _spThreadController;
-            size_t _position;
-            mutable bool _isIncrementDeferred = false;
-
-        public:
-            using iterator_category = std::input_iterator_tag;
-            using value_type = T;
-            using difference_type = std::ptrdiff_t;
-            using reference = std::add_lvalue_reference_t<T>;
-            using pointer = std::add_pointer_t<T>;
-
-        public:
-            YieldingIterator(std::shared_ptr<std::thread> spThread, std::shared_ptr<ThreadController<T>> spThreadController)
-                : _spThread(std::move(spThread)), _spThreadController(std::move(spThreadController)), _position(0)
-            {
-                Increment();
-            }
-
-            YieldingIterator()
-                : _position(std::numeric_limits<size_t>::max())
-            { }
-
-            YieldingIterator(YieldingIterator<T> const&) = default;
-            YieldingIterator(YieldingIterator<T>&&) = default;
-            YieldingIterator& operator=(YieldingIterator<T> const&) = default;
-            YieldingIterator& operator=(YieldingIterator<T>&&) = default;
-
-        public:
-            bool Equals(YieldingIterator<T> const& other) const { return _spThread == other._spThread && _position == other._position; }
-
-            reference Get() const { return _spThreadController->GetValue(); }
-
-            void Increment()
-            {
-                if (_position == std::numeric_limits<size_t>::max())
-                    return;
-
-                _spThreadController->SwitchToThread();
-                _spThreadController->WaitForThread();
-                _spThreadController->TryRethrow();
-
-                if (!_spThreadController->IsThreadFinished())
-                    ++_position;
-                else
-                {
-                    _position = std::numeric_limits<size_t>::max();
-                    _spThreadController = nullptr;
-                    _spThread = nullptr;
-                }
-            }
-        };
-
-        template <class T>
         class YieldingEnumeration : public EnumerationBase<YieldingIterator<T>>
         {
         private:
@@ -158,8 +102,8 @@ namespace Linqpp
                         spThreadController->SwitchToThread();
                     }
                 });
+
                 static_assert(std::is_copy_assignable<YieldingIterator<T>>::value, "YieldingIterator is not copy assignable.");
-                static_assert(std::is_move_assignable<YieldingIterator<T>>::value, "YieldingIterator is not move assignable.");
                 return YieldingIterator<T>(std::move(spThread), std::move(spThreadController));
             }
 
@@ -168,23 +112,6 @@ namespace Linqpp
                 return YieldingIterator<T>();
             }
         };
-
-        template <class Function>
-        class OnExit
-        {
-        private:
-            Function _function;
-
-        public:
-            OnExit(Function const& function)
-                : _function(function)
-            { }
-
-            ~OnExit() { _function(); }
-        };
-
-        template <class Function>
-        auto on_exit(Function&& function) { return OnExit<Function>(std::forward<Function>(function)); }
     }
 }
 
@@ -192,7 +119,7 @@ namespace Linqpp
     using __Type = __type; \
     return Linqpp::Yielding::YieldingEnumeration<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) \
     { \
-        auto __onExit = Linqpp::Yielding::on_exit([=] \
+        auto __onExit = Linqpp::Utility::on_exit([=] \
         { \
             __spThreadController->FinishThread(); \
             __spThreadController->SwitchToHost(); \

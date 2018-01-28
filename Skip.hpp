@@ -1,7 +1,5 @@
 #pragma once
 
-#include "IteratorAdapter.hpp"
-
 #include <algorithm>
 
 namespace Linqpp

@@ -16,7 +16,7 @@ namespace Linqpp
 }
 
 #include "From.hpp"
-#include "IntIterator.hpp"
+#include "Iterator/IntIterator.hpp"
 
 #include <array>
 

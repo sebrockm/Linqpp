@@ -4,20 +4,20 @@
 #include <iterator>
 #include <numeric>
 
-#include "ConcatIterator.hpp"
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
 #include "Enumerable.hpp"
 #include "ExtendingEnumeration.hpp"
 #include "From.hpp"
+#include "Iterator/ConcatIterator.hpp"
+#include "Iterator/SelectIterator.hpp"
+#include "Iterator/SortingIterator.hpp"
+#include "Iterator/TakeIterator.hpp"
+#include "Iterator/WhereIterator.hpp"
+#include "Iterator/ZipIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
-#include "SelectIterator.hpp"
 #include "Skip.hpp"
-#include "SortingIterator.hpp"
-#include "TakeIterator.hpp"
-#include "WhereIterator.hpp"
-#include "ZipIterator.hpp"
 
 namespace Linqpp
 {
@@ -34,6 +34,10 @@ namespace Linqpp
 
     protected:
         EnumerationBase() = default;
+        EnumerationBase(EnumerationBase const&) = default;
+        EnumerationBase(EnumerationBase&&) = default;
+        EnumerationBase& operator=(EnumerationBase const&) = default;
+        EnumerationBase& operator=(EnumerationBase&&) = default;
 
     public:
         virtual ~EnumerationBase() = default;
