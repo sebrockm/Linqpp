@@ -231,6 +231,14 @@ TEST_CASE("unit tests")
         CHECK(From(forw).First() == 3);
         CHECK(From(inp).First() == -1);
 
+        CHECK(From(ran).First([](auto i){ return i > 4; }) == 5);
+        CHECK(From(bid).First([](auto i){ return i % 2 == 1; }) == 7);
+        CHECK(From(forw).First([](auto i){ return i > 4; }) == 5);
+        CHECK(From(inp).First([](auto i){ return i > 0; }) == 1);
+    }
+
+    SECTION("FirstOrDefault")
+    {
         CHECK(From(ran).FirstOrDefault() == 1);
         CHECK(From(bid).FirstOrDefault() == 6);
         CHECK(From(forw).FirstOrDefault() == 3);
@@ -240,6 +248,16 @@ TEST_CASE("unit tests")
         CHECK(From(bid).Skip(23).FirstOrDefault() == 0);
         CHECK(From(forw).Skip(23).FirstOrDefault() == 0);
         CHECK(From(inp).Skip(23).FirstOrDefault() == 0);
+
+        CHECK(From(ran).FirstOrDefault([](auto i){ return i > 4; }) == 5);
+        CHECK(From(bid).FirstOrDefault([](auto i){ return i % 2 == 1; }) == 7);
+        CHECK(From(forw).FirstOrDefault([](auto i){ return i > 4; }) == 5);
+        CHECK(From(inp).FirstOrDefault([](auto i){ return i > 0; }) == 1);
+
+        CHECK(From(ran).FirstOrDefault([](auto i){ return i < 0; }) == 0);
+        CHECK(From(bid).FirstOrDefault([](auto i){ return i < 1; }) == 0);
+        CHECK(From(forw).FirstOrDefault([](auto i){ return i < 1; }) == 0);
+        CHECK(From(inp).FirstOrDefault([](auto i){ return i > 10; }) == 0);
     }
 
     SECTION("Last")
@@ -249,6 +267,14 @@ TEST_CASE("unit tests")
         CHECK(From(forw).Last() == 7);
         //CHECK(From(inp).Last() == 6); TODO
 
+        CHECK(From(ran).Last([](auto i){ return i < 4; }) == 3);
+        CHECK(From(bid).Last([](auto i){ return i % 2 == 0; }) == 8);
+        CHECK(From(forw).Last([](auto i){ return i < 5; }) == 4);
+        //CHECK(From(inp).Last([](auto i){ return i < 5; }) == 4); TODO
+    }
+
+    SECTION("LastOrDefault")
+    {
         CHECK(From(ran).LastOrDefault() == 5);
         CHECK(From(bid).LastOrDefault() == 9);
         CHECK(From(forw).LastOrDefault() == 7);
@@ -258,6 +284,16 @@ TEST_CASE("unit tests")
         CHECK(From(bid).Skip(23).LastOrDefault() == 0);
         CHECK(From(forw).Skip(23).LastOrDefault() == 0);
         //CHECK(From(inp).Skip(23).LastOrDefault() == 0); TODO
+
+        CHECK(From(ran).LastOrDefault([](auto i){ return i < 4; }) == 3);
+        CHECK(From(bid).LastOrDefault([](auto i){ return i % 2 == 0; }) == 8);
+        CHECK(From(forw).LastOrDefault([](auto i){ return i < 5; }) == 4);
+        //CHECK(From(inp).LastOrDefault([](auto i){ return i < 5; }) == 4); TODO
+
+        CHECK(From(ran).LastOrDefault([](auto i){ return i > 10; }) == 0);
+        CHECK(From(bid).LastOrDefault([](auto i){ return i < 1; }) == 0);
+        CHECK(From(forw).LastOrDefault([](auto i){ return i < 0; }) == 0);
+        //CHECK(From(inp).LastOrDefault([](auto i){ return i > 10; }) == 0); TODO
     }
 
     SECTION("Max")

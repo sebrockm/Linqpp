@@ -52,11 +52,11 @@ namespace Linqpp
         {
             first = std::find_if(first, last, predicate);
             if (first == last)
-                return first;
+                return last;
 
             while (true)
             {
-                auto before = first;
+                auto before = first++;
                 first = std::find_if(first, last, predicate);
                 if (first == last)
                     return before;
