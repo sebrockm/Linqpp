@@ -3,7 +3,7 @@ CFLAGS = -std=c++14 -Wall -pedantic -O3 -pthread -I..
 
 all: test readme
 
-%.o: %.cpp ../*.hpp
+%.o: %.cpp ../*.hpp ../Iterator/*.hpp
 	$(CC) $(CFLAGS) -c $<
 
 catch.o: catch.cpp catch.hpp

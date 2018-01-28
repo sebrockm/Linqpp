@@ -28,13 +28,14 @@ namespace Linqpp
         InputIterator _first;
         InputIterator _last;
         std::shared_ptr<Vector> _spData = std::make_shared<Vector>();
-        size_t _position = 0;
+        mutable size_t _position = std::numeric_limits<size_t>::max();
         LessThanComparer _comparer;
+        mutable bool _isInitialized = false;
 
     // Constructors, destructor
     public:
         SortingIterator(InputIterator first, InputIterator last, LessThanComparer comparer)
-            : _first(first), _last(last), _comparer(std::move(comparer))
+            : _first(first), _last(last), _position(0), _comparer(std::move(comparer))
         { }
 
         SortingIterator() = default;
@@ -49,22 +50,50 @@ namespace Linqpp
 
     // IteratorAdapter
     public:
-        bool Equals(SortingIterator const& other) const { return _spData == other._spData && _position == other._position; }
+        bool Equals(SortingIterator const& other) const
+        {
+            EnsureInitialized();
+            other.EnsureInitialized();
+            return _spData == other._spData && _position == other._position;
+        }
+
         reference Get() const { EnsureInitialized(); return (*_spData)[_position]; }
-        void Increment() { ++_position; }
-        void Decrement() { --_position; }
-        difference_type Difference(SortingIterator const& other) const { return _position - other._position; }
-        void Move(difference_type n) { _position += n; }
+        void Increment() { EnsureInitialized(); ++_position; }
+        void Decrement() { EnsureInitialized(); --_position; }
+
+        difference_type Difference(SortingIterator const& other) const
+        {
+            EnsureInitialized();
+            other.EnsureInitialized();
+            return _position - other._position;
+        }
+
+        void Move(difference_type n) { EnsureInitialized(); _position += n; }
+
+        auto GetEnd() const
+        {
+            SortingIterator end = *this;
+            end._position = _isInitialized ? _spData->size() : std::numeric_limits<size_t>::max();
+            return end;
+        }
 
     // Internals
     private:
         void EnsureInitialized() const
         {
-            if (_first == _last || !_spData->empty())
+            if (_isInitialized)
                 return;
 
-            _spData->assign(_first, _last);
-            std::sort(_spData->begin(), _spData->end(), _comparer);
+            if (_spData->empty())
+            {
+                _spData->assign(_first, _last);
+                std::sort(_spData->begin(), _spData->end(), _comparer);
+            }
+
+            if (_position == std::numeric_limits<size_t>::max())
+                _position = _spData->size();
+
+            _isInitialized = true;
         }
 
         static void Swap(SortingIterator& iterator1, SortingIterator& iterator2, std::true_type)
@@ -88,6 +117,6 @@ namespace Linqpp
         static_assert(std::is_copy_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not copy assignable.");
 
         auto firstSorted = SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>(first, last, std::forward<LessThanComparer>(comparer));
-        return From(firstSorted, firstSorted + From(first, last).Count());
+        return From(firstSorted, firstSorted.GetEnd());
     }
 }

@@ -73,7 +73,7 @@ namespace Linqpp
     auto CreateZipIterator(InputIterator1 iterator1, InputIterator2 iterator2, BinaryFunction&& function)
     {
         static_assert(std::is_copy_assignable<ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>>::value, "ZipIterator is not copy assignable.");
-        static_assert(std::is_move_assignable<ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>>::value, "ZipIterator is not move assignable.");
+
         return ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>(iterator1, iterator2, std::forward<BinaryFunction>(function));
     }
 }

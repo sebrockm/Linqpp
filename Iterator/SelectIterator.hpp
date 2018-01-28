@@ -66,7 +66,7 @@ namespace Linqpp
     auto CreateSelectIterator(InputIterator iterator, UnaryFunction&& function)
     {
         static_assert(std::is_copy_assignable<SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>>::value, "SelectIterator is not copy assignable.");
-        static_assert(std::is_move_assignable<SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>>::value, "SelectIterator is not move assignable.");
+
         return SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>(iterator, std::forward<UnaryFunction>(function));
     }
 }

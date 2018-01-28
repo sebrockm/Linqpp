@@ -335,12 +335,12 @@ TEST_CASE("unit tests")
         CHECK(From(ran).OrderBy([](auto a) { return a; }).SequenceEqual(ran));
         CHECK(From(bid).OrderBy([](auto a) { return a; }).SequenceEqual(bid));
         CHECK(From(forw).OrderBy([](auto a) { return a; }).SequenceEqual(forw));
-        //TODO: CHECK(From(inp).OrderBy([](auto a) { return a; }).SequenceEqual(inp));
+        CHECK(From(inp).OrderBy([](auto a) { return a; }).SequenceEqual(inp));
 
         CHECK(From(ran).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(ran).Reverse()));
         CHECK(From(bid).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(bid).Reverse()));
         CHECK(From(forw).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(forw).ToVector().Reverse()));
-        //TODO: CHECK(From(inp).OrderByDescending([](auto a) { return a; }).SequenceEqual(inp.ToVector().Reverse()));
+        CHECK(From(inp).OrderByDescending([](auto a) { return a; }).SequenceEqual(inp.ToVector().Reverse()));
     }
 
     SECTION("Repeat")

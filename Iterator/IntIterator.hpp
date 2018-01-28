@@ -46,7 +46,7 @@ namespace Linqpp
     auto CreateIntIterator(Int integer)
     {
         static_assert(std::is_copy_assignable<IntIterator<Int>>::value, "IntIterator is not copy assignable.");
-        static_assert(std::is_move_assignable<IntIterator<Int>>::value, "IntIterator is not move assignable.");
+
         return IntIterator<Int>(integer);
     }
 }
