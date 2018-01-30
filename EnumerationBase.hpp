@@ -144,18 +144,19 @@ namespace Linqpp
             return found != end() ? *found : value_type();
         }
 
-        decltype(auto) Last() const { return *Linqpp::Last(begin(), end()); }
+        decltype(auto) Last() const { return Last([](auto) { return true; }); }
 
         template <class Predicate>
-        decltype(auto) Last(Predicate&& predicate) const { return *Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate)); }
+        decltype(auto) Last(Predicate&& predicate) const { bool b; return Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category(), b); }
 
         value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
 
         template <class Predicate>
         value_type LastOrDefault(Predicate&& predicate) const
         {
-            auto found = Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate));
-            return found != end() ? *found : value_type();
+            bool isValid;
+            auto found = Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category(), isValid);
+            return isValid ? found : value_type();
         }
 
         decltype(auto) Max() const { return Linqpp::Max(begin(), end()); }
