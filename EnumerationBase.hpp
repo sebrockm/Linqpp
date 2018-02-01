@@ -10,6 +10,7 @@
 #include "ExtendingEnumeration.hpp"
 #include "From.hpp"
 #include "Iterator/ConcatIterator.hpp"
+#include "Iterator/OwningIterator.hpp"
 #include "Iterator/SelectIterator.hpp"
 #include "Iterator/SortingIterator.hpp"
 #include "Iterator/TakeIterator.hpp"
@@ -187,7 +188,7 @@ namespace Linqpp
             return OrderBy(std::forward<UnaryFunction>(unaryFunction), [=] (auto const& t1, auto const& t2) { return comparer(t2, t1); });
         }
 
-        auto Reverse() const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
+        auto Reverse() const { return InternalReverse(iterator_category()); }
 
         template <class UnaryFunction>
         auto Select(UnaryFunction&& unaryFunction) const { return InternalSelect(std::forward<UnaryFunction>(unaryFunction), nullptr); }
@@ -248,6 +249,9 @@ namespace Linqpp
         }
 
     private:
+        auto InternalReverse(std::bidirectional_iterator_tag) const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
+        auto InternalReverse(std::input_iterator_tag) const { return CreateOwningEnumeration(begin(), end()).Reverse(); }
+
         template <class UnaryFunction>
         auto InternalSelect(UnaryFunction unaryFunction, decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))*) const
         {

@@ -360,8 +360,8 @@ TEST_CASE("unit tests")
     {
         CHECK(From(ran).Reverse().SequenceEqual(std::vector<int>{5, 4, 3, 2, 1}));
         CHECK(From(bid).Reverse().SequenceEqual(std::vector<int>{9, 8, 7, 6}));
-        //TODO: CHECK(From(forw).Reverse().SequenceEqual(std::vector<int>{7, 6, 5, 4, 3}));
-        //TODO: CHECK(From(inp).Reverse().SequenceEqual(std::vector<int>{6, 5, 4, 3, 2, 1, 0, -1}));
+        CHECK(From(forw).Reverse().SequenceEqual(std::vector<int>{7, 6, 5, 4, 3}));
+        CHECK(From(inp).Reverse().SequenceEqual(std::vector<int>{6, 5, 4, 3, 2, 1, 0, -1}));
     }
 
     SECTION("Select")

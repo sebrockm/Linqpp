@@ -72,7 +72,7 @@ namespace Linqpp
 
         auto GetEnd() const
         {
-            SortingIterator end = *this;
+            auto end = *this;
             end._position = _isInitialized ? _spData->size() : std::numeric_limits<size_t>::max();
             return end;
         }
@@ -108,6 +108,7 @@ namespace Linqpp
             std::swap(iterator1._last, iterator2._last);
             std::swap(iterator1._spData, iterator2._spData);
             std::swap(iterator1._position, iterator2._position);
+            std::swap(iterator1._isInitialized, iterator2._isInitialized);
         }
     };
 
