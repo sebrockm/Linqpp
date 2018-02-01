@@ -25,7 +25,7 @@ namespace Linqpp
     template <class T>
     auto Enumerable::Empty()
     {
-        return ExtendingEnumeration<std::array<T, 0>>();
+        return ExtendingEnumerable<std::array<T, 0>>();
     }
 
     template <class Int1, class Int2>

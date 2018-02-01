@@ -8,7 +8,7 @@
 #include <limits>
 #include <thread>
 
-#include "EnumerationBase.hpp"
+#include "IEnumerable.hpp"
 #include "Iterator/YieldingIterator.hpp"
 #include "Utility.hpp"
 
@@ -70,20 +70,20 @@ namespace Linqpp
         };
 
         template <class T>
-        class YieldingEnumeration : public EnumerationBase<YieldingIterator<T>>
+        class YieldingEnumerable : public IEnumerable<YieldingIterator<T>>
         {
         private:
             std::function<void(std::shared_ptr<ThreadController<T>>)> _function;
 
         public:
-            YieldingEnumeration(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
+            YieldingEnumerable(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
                 : _function(std::move(function))
             { }
 
-            YieldingEnumeration(YieldingEnumeration const&) = default;
-            YieldingEnumeration(YieldingEnumeration&&) = default;
-            YieldingEnumeration& operator=(YieldingEnumeration const&) = default;
-            YieldingEnumeration& operator=(YieldingEnumeration&&) = default;
+            YieldingEnumerable(YieldingEnumerable const&) = default;
+            YieldingEnumerable(YieldingEnumerable&&) = default;
+            YieldingEnumerable& operator=(YieldingEnumerable const&) = default;
+            YieldingEnumerable& operator=(YieldingEnumerable&&) = default;
 
         public:
             virtual YieldingIterator<T> begin() const override
@@ -117,7 +117,7 @@ namespace Linqpp
 
 #define START_YIELDING(__type) \
     using __Type = __type; \
-    return Linqpp::Yielding::YieldingEnumeration<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) \
+    return Linqpp::Yielding::YieldingEnumerable<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) \
     { \
         auto __onExit = Linqpp::Utility::on_exit([=] \
         { \

@@ -13,7 +13,7 @@ namespace Linqpp
     namespace Detail
     {
         template <class RandomIterator>
-        auto InternalGetEnumeratorFromTake(RandomIterator first, size_t n, RandomIterator last, std::random_access_iterator_tag)
+        auto InternalGetEnumerableFromTake(RandomIterator first, size_t n, RandomIterator last, std::random_access_iterator_tag)
         {
            return From(first, std::min(first + n, last));
         }
@@ -53,7 +53,7 @@ namespace Linqpp
         };
 
         template <class InputIterator>
-        auto InternalGetEnumeratorFromTake(InputIterator first, size_t n, InputIterator last, std::input_iterator_tag)
+        auto InternalGetEnumerableFromTake(InputIterator first, size_t n, InputIterator last, std::input_iterator_tag)
         {
             using Category = typename std::iterator_traits<InputIterator>::iterator_category;
             static_assert(std::is_copy_assignable<TakeIterator<InputIterator, Category>>::value, "TakeIterator is not copy assignable.");
@@ -63,8 +63,8 @@ namespace Linqpp
     }
 
     template <class InputIterator>
-    auto GetEnumeratorFromTake(InputIterator first, size_t n, InputIterator last)
+    auto GetEnumerableFromTake(InputIterator first, size_t n, InputIterator last)
     {
-       return Detail::InternalGetEnumeratorFromTake(first, n, last, typename std::iterator_traits<InputIterator>::iterator_category());
+       return Detail::InternalGetEnumerableFromTake(first, n, last, typename std::iterator_traits<InputIterator>::iterator_category());
     }
 }

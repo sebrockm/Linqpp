@@ -6,10 +6,10 @@
 namespace Linqpp
 {
     template <class InputIterator>
-    class EnumerationBase;
+    class IEnumerable;
 
     template <class Container>
-    class ExtendingEnumeration : public Container, public EnumerationBase<Utility::Iterator<Container>>
+    class ExtendingEnumerable : public Container, public IEnumerable<Utility::Iterator<Container>>
     {
     public:
         using Container::Container;

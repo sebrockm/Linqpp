@@ -91,7 +91,7 @@ namespace Linqpp
     };
 
     template <class InputIterator>
-    auto CreateOwningEnumeration(InputIterator first, InputIterator last)
+    auto CreateOwningEnumerable(InputIterator first, InputIterator last)
     {
         static_assert(std::is_copy_assignable<OwningIterator<InputIterator>>::value, "OwningIterator is not copy assignable.");
 

@@ -7,7 +7,7 @@
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
 #include "Enumerable.hpp"
-#include "ExtendingEnumeration.hpp"
+#include "ExtendingEnumerable.hpp"
 #include "From.hpp"
 #include "Iterator/ConcatIterator.hpp"
 #include "Iterator/OwningIterator.hpp"
@@ -26,7 +26,7 @@ namespace Linqpp
     auto From(InputIterator first, InputIterator last);
 
     template <class InputIterator>
-    class EnumerationBase
+    class IEnumerable
     {
     public:
         using value_type = typename std::iterator_traits<InputIterator>::value_type;
@@ -34,14 +34,14 @@ namespace Linqpp
         using iterator = InputIterator;
 
     protected:
-        EnumerationBase() = default;
-        EnumerationBase(EnumerationBase const&) = default;
-        EnumerationBase(EnumerationBase&&) = default;
-        EnumerationBase& operator=(EnumerationBase const&) = default;
-        EnumerationBase& operator=(EnumerationBase&&) = default;
+        IEnumerable() = default;
+        IEnumerable(IEnumerable const&) = default;
+        IEnumerable(IEnumerable&&) = default;
+        IEnumerable& operator=(IEnumerable const&) = default;
+        IEnumerable& operator=(IEnumerable&&) = default;
 
     public:
-        virtual ~EnumerationBase() = default;
+        virtual ~IEnumerable() = default;
 
     public:
         virtual InputIterator begin() const = 0;
@@ -176,7 +176,7 @@ namespace Linqpp
         template <class UnaryFunction, class LessThanComparer>
         auto OrderBy(UnaryFunction unaryFunction, LessThanComparer comparer) const 
         { 
-            return CreateSortedEnumeration(begin(), end(), [=] (auto const& t1, auto const& t2) { return comparer(unaryFunction(t1), unaryFunction(t2)); });
+            return CreateSortedEnumerable(begin(), end(), [=] (auto const& t1, auto const& t2) { return comparer(unaryFunction(t1), unaryFunction(t2)); });
         }
 
         template <class UnaryFunction>
@@ -217,9 +217,9 @@ namespace Linqpp
         template <class UnaryFunction>
         auto Sum(UnaryFunction&& unaryFunction) const { return Select(std::forward<UnaryFunction>(unaryFunction)).Sum(); }
 
-        auto Take(size_t n) const { return GetEnumeratorFromTake(begin(), n, end()); }
+        auto Take(size_t n) const { return GetEnumerableFromTake(begin(), n, end()); }
 
-        auto ToVector() const { return ExtendingEnumeration<std::vector<value_type>>(begin(), end()); }
+        auto ToVector() const { return ExtendingEnumerable<std::vector<value_type>>(begin(), end()); }
 
         template <class Container>
         auto Union(Container&& container) const { return Concat(std::forward<Container>(container)).Distinct(); }
@@ -250,7 +250,7 @@ namespace Linqpp
 
     private:
         auto InternalReverse(std::bidirectional_iterator_tag) const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
-        auto InternalReverse(std::input_iterator_tag) const { return CreateOwningEnumeration(begin(), end()).Reverse(); }
+        auto InternalReverse(std::input_iterator_tag) const { return CreateOwningEnumerable(begin(), end()).Reverse(); }
 
         template <class UnaryFunction>
         auto InternalSelect(UnaryFunction unaryFunction, decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))*) const
