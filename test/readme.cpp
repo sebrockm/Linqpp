@@ -11,7 +11,7 @@ int main()
     std::vector<int> v = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     double a[] = { 11.1, 12.2 };
     
-    auto example = // first, transfer v into a Linqpp enumeration using From()
+    auto example = // first, transfer v into a Linqpp IEnumerable using From()
         From(v) // whenever std::begin(v) and std::end(v) is valid code, From(v) is also valid
         .Reverse()
         .OrderBy([](auto i) { return i; }) // C++ lambdas are not as concise as in C# but still OK
@@ -23,7 +23,7 @@ int main()
         
     // No computation has been done yet, lazy evaluation
         
-    for (auto d : example) // Linqpp enumerations also work with std::begin and std::end, of course
+    for (auto d : example) // Linqpp IEnumerable also work with std::begin and std::end, of course
         std::cout << d << " "; // output: 6.14 8.14 10.14 11.1 12.2
     std::cout << std::endl;
         
@@ -42,7 +42,7 @@ int main()
 
     // Linqpp also provides an equivalent of C#'s yield return:
 
-    auto YieldExample = [] // Will return an enumeration structure that can be used with Linqpp
+    auto YieldExample = [] // Will return an IEnumerable structure that can be used with Linqpp
     {
         START_YIELDING(int) // Declare that you want to return ints
 
