@@ -19,6 +19,7 @@
 #include "Last.hpp"
 #include "MinMax.hpp"
 #include "Skip.hpp"
+#include "Utility.hpp"
 
 namespace Linqpp
 {
@@ -244,8 +245,9 @@ namespace Linqpp
         {
             auto cBegin = std::begin(std::forward<Container>(container));
             auto cEnd = std::end(std::forward<Container>(container));
+            using cCategory = typename std::iterator_traits<Utility::Iterator<Container>>::iterator_category;
 
-            return From(CreateZipIterator(begin(), cBegin, binaryFunction), CreateZipIterator(end(), cEnd, binaryFunction));
+            return CreateZipEnumerable(begin(), end(), iterator_category(), cBegin, cEnd, cCategory(), binaryFunction);
         }
 
     private:

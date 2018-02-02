@@ -628,6 +628,85 @@ TEST_CASE("unit tests")
         CHECK(inp.Zip(inp, [](auto i, auto j) { return std::make_pair(i, j); })
                 .SequenceEqual(std::vector<std::pair<int, int>>{{-1, -1}, {0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}}));
 
-        //TODO: different sizes
+
+        CHECK(From(ran).Zip(From(ran).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 1}, {2, 2}, {3, 3}}));
+        CHECK(From(ran).Take(3).Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 1}, {2, 2}, {3, 3}}));
+
+        CHECK(From(ran).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 6}, {2, 7}, {3, 8}, {4, 9}}));
+        CHECK(From(ran).Take(3).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 6}, {2, 7}, {3, 8}}));
+
+        CHECK(From(ran).Zip(From(forw).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 3}, {2, 4}, {3, 5}}));
+        CHECK(From(ran).Take(3).Zip(forw, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, 3}, {2, 4}, {3, 5}}));
+
+        CHECK(From(ran).Zip(inp, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, -1}, {2, 0}, {3, 1}, {4, 2}, {5, 3}}));
+        CHECK(From(ran).Zip(inp.Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{1, -1}, {2, 0}, {3, 1}}));
+
+        CHECK(From(bid).Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 1}, {7, 2}, {8, 3}, {9, 4}}));
+        CHECK(From(bid).Zip(From(ran).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 1}, {7, 2}, {8, 3}}));
+
+        CHECK(From(bid).Zip(From(bid).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 6}, {7, 7}, {8, 8}}));
+        CHECK(From(bid).Take(3).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 6}, {7, 7}, {8, 8}}));
+
+        CHECK(From(bid).Zip(forw, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 3}, {7, 4}, {8, 5}, {9, 6}}));
+        CHECK(From(bid).Zip(From(forw).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, 3}, {7, 4}, {8, 5}}));
+
+        CHECK(From(bid).Zip(inp, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, -1}, {7, 0}, {8, 1}, {9, 2}}));
+        CHECK(From(bid).Zip(inp.Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{6, -1}, {7, 0}, {8, 1}}));
+
+        CHECK(From(forw).Zip(From(ran).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 1}, {4, 2}, {5, 3}}));
+        CHECK(From(forw).Take(3).Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 1}, {4, 2}, {5, 3}}));
+        
+        CHECK(From(forw).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 6}, {4, 7}, {5, 8}, {6, 9}}));
+        CHECK(From(forw).Take(3).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 6}, {4, 7}, {5, 8}}));
+
+        CHECK(From(forw).Zip(From(forw).Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 3}, {4, 4}, {5, 5}}));
+        CHECK(From(forw).Take(3).Zip(forw, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, 3}, {4, 4}, {5, 5}}));
+
+        CHECK(From(forw).Zip(inp, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, -1}, {4, 0}, {5, 1}, {6, 2}, {7, 3}}));
+        CHECK(From(forw).Zip(inp.Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{3, -1}, {4, 0}, {5, 1}}));
+
+        CHECK(inp.Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}}));
+        CHECK(inp.Take(3).Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 1}, {0, 2}, {1, 3}}));
+
+        CHECK(inp.Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 6}, {0, 7}, {1, 8}, {2, 9}}));
+        CHECK(inp.Take(3).Zip(bid, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 6}, {0, 7}, {1, 8}}));
+
+        CHECK(inp.Zip(forw, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 3}, {0, 4}, {1, 5}, {2, 6}, {3, 7}}));
+        CHECK(inp.Take(3).Zip(forw, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, 3}, {0, 4}, {1, 5}}));
+
+        CHECK(inp.Zip(inp.Take(3), [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, -1}, {0, 0}, {1, 1}}));
+        CHECK(inp.Take(3).Zip(inp, [](auto i, auto j) { return std::make_pair(i, j); })
+                .SequenceEqual(std::vector<std::pair<int, int>>{{-1, -1}, {0, 0}, {1, 1}}));
     }
 }

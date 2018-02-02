@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "IteratorAdapter.hpp"
 #include "DummyPointer.hpp"
 
@@ -46,7 +48,7 @@ namespace Linqpp
 
     // IteratorAdapter
     public:
-        bool Equals(ZipIterator const& other) const { return _iterator1 == other._iterator1 && _iterator2 == other._iterator2; }
+        bool Equals(ZipIterator const& other) const { return _iterator1 == other._iterator1 || _iterator2 == other._iterator2; }
         reference Get() const { return _function(*_iterator1, *_iterator2); }
         pointer operator->() const { return CreateDummyPointer(Get()); }
         void Increment() { ++_iterator1; ++_iterator2; }
@@ -75,5 +77,25 @@ namespace Linqpp
         static_assert(std::is_copy_assignable<ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>>::value, "ZipIterator is not copy assignable.");
 
         return ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>(iterator1, iterator2, std::forward<BinaryFunction>(function));
+    }
+
+    template <class InputIterator>
+    auto From(InputIterator first, InputIterator last);
+
+    template <class RandomIterator1, class RandomIterator2, class BinaryFunction>
+    auto CreateZipEnumerable(RandomIterator1 first1, RandomIterator1 last1, std::random_access_iterator_tag,
+            RandomIterator2 first2, RandomIterator2 last2, std::random_access_iterator_tag, BinaryFunction function)
+    {
+        auto zipFirst = CreateZipIterator(first1, first2, function);
+        return From(zipFirst, zipFirst + std::min(last1 - first1, last2 - first2));
+    }
+
+    template <class InputIterator1, class InputIterator2, class BinaryFunction>
+    auto CreateZipEnumerable(InputIterator1 first1, InputIterator1 last1, std::input_iterator_tag,
+            InputIterator2 first2, InputIterator2 last2, std::input_iterator_tag, BinaryFunction function)
+    {
+        auto zipFirst = CreateZipIterator(first1, first2, function);
+        auto zipLast = CreateZipIterator(last1, last2, function);
+        return From(zipFirst, zipLast);
     }
 }
