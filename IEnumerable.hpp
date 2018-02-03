@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <numeric>
+#include <vector>
 
 #include "Distinct.hpp"
 #include "ElementAt.hpp"
@@ -219,6 +221,39 @@ namespace Linqpp
         auto Sum(UnaryFunction&& unaryFunction) const { return Select(std::forward<UnaryFunction>(unaryFunction)).Sum(); }
 
         auto Take(size_t n) const { return GetEnumerableFromTake(begin(), n, end()); }
+
+        template <class KeySelector>
+        auto ToMap(KeySelector keySelector) const
+        {
+            using Key = decltype(keySelector(std::declval<value_type>()));
+            return ToMap(keySelector, std::less<Key>());
+        }
+
+        template <class KeySelector, class KeyComparer,
+                 class Key = decltype(std::declval<KeySelector>()(std::declval<value_type>())),
+                 class = decltype(std::declval<KeyComparer>()(std::declval<value_type>(), std::declval<value_type>()))>
+        auto ToMap(KeySelector keySelector, KeyComparer keyComparer) const
+        { 
+            auto keyValuePairs = Select([=](value_type const& v) { return std::make_pair(keySelector(v), v); });
+            return ExtendingEnumerable<std::map<Key, value_type, KeyComparer>>(keyValuePairs.begin(), keyValuePairs.end(), keyComparer);
+        }
+
+        template <class KeySelector, class ValueSelector, class = decltype(std::declval<ValueSelector>()(std::declval<value_type>()))> 
+        auto ToMap(KeySelector keySelector, ValueSelector valueSelector) const
+        {
+            using Key = decltype(keySelector(std::declval<value_type>()));
+            return ToMap(keySelector, valueSelector, std::less<Key>());
+        }
+
+        template <class KeySelector, class ValueSelector, class KeyComparer>
+        auto ToMap(KeySelector keySelector, ValueSelector valueSelector, KeyComparer keyComparer) const
+        {
+            using Key = decltype(keySelector(std::declval<value_type>()));
+            using Value = decltype(valueSelector(std::declval<value_type>()));
+
+            auto keyValuePairs = Select([=](value_type const& v) { return std::make_pair(keySelector(v), valueSelector(v)); });
+            return ExtendingEnumerable<std::map<Key, Value, KeyComparer>>(keyValuePairs.begin(), keyValuePairs.end(), keyComparer);
+        }
 
         auto ToVector() const { return ExtendingEnumerable<std::vector<value_type>>(begin(), end()); }
 

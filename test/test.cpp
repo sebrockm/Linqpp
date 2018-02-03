@@ -339,8 +339,8 @@ TEST_CASE("unit tests")
 
         CHECK(From(ran).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(ran).Reverse()));
         CHECK(From(bid).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(bid).Reverse()));
-        CHECK(From(forw).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(forw).ToVector().Reverse()));
-        CHECK(From(inp).OrderByDescending([](auto a) { return a; }).SequenceEqual(inp.ToVector().Reverse()));
+        CHECK(From(forw).OrderByDescending([](auto a) { return a; }).SequenceEqual(From(forw).Reverse()));
+        CHECK(From(inp).OrderByDescending([](auto a) { return a; }).SequenceEqual(inp.Reverse()));
     }
 
     SECTION("Repeat")
@@ -476,12 +476,92 @@ TEST_CASE("unit tests")
         CHECK(From(inp).Take(10).Count() == inp.Count());
     }
 
+    SECTION("ToMap")
+    {
+        SECTION("KeySelector")
+        {
+            std::map<int, int> mran = From(ran).ToMap([](auto i) { return i; });
+            std::map<int, int> mbid = From(bid).ToMap([](auto i) { return i; });
+            std::map<int, int> mforw = From(forw).ToMap([](auto i) { return i; });
+            std::map<int, int> minp = From(inp).ToMap([](auto i) { return i; });
+
+            CHECK(Enumerable::Range(1, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mran));
+            CHECK(Enumerable::Range(6, 4).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mbid));
+            CHECK(Enumerable::Range(3, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mforw));
+            CHECK(Enumerable::Range(-1, 8).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(minp));
+
+            CHECK(From(ran).ToMap([](auto i) { return i; }).SequenceEqual(mran));
+            CHECK(From(bid).ToMap([](auto i) { return i; }).SequenceEqual(mbid));
+            CHECK(From(forw).ToMap([](auto i) { return i; }).SequenceEqual(mforw));
+            CHECK(From(inp).ToMap([](auto i) { return i; }).SequenceEqual(minp));
+        }
+
+        SECTION("KeySelector + KeyComparer")
+        {
+            std::map<int, int, std::greater<>> mran = From(ran).ToMap([](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> mbid = From(bid).ToMap([](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> mforw = From(forw).ToMap([](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> minp = From(inp).ToMap([](auto i) { return i; }, std::greater<>());
+
+            CHECK(Enumerable::Range(1, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mran));
+            CHECK(Enumerable::Range(6, 4).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mbid));
+            CHECK(Enumerable::Range(3, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mforw));
+            CHECK(Enumerable::Range(-1, 8).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(minp));
+
+            CHECK(From(ran).ToMap([](auto i) { return i; }, std::greater<>()).SequenceEqual(mran));
+            CHECK(From(bid).ToMap([](auto i) { return i; }, std::greater<>()).SequenceEqual(mbid));
+            CHECK(From(forw).ToMap([](auto i) { return i; }, std::greater<>()).SequenceEqual(mforw));
+            CHECK(From(inp).ToMap([](auto i) { return i; }, std::greater<>()).SequenceEqual(minp));
+        }
+
+        SECTION("KeySelector + ValueSelector")
+        {
+            std::map<int, int> mran = From(ran).ToMap([](auto i) { return i; }, [](auto i) { return i; });
+            std::map<int, int> mbid = From(bid).ToMap([](auto i) { return i; }, [](auto i) { return i; });
+            std::map<int, int> mforw = From(forw).ToMap([](auto i) { return i; }, [](auto i) { return i; });
+            std::map<int, int> minp = From(inp).ToMap([](auto i) { return i; }, [](auto i) { return i; });
+
+            CHECK(Enumerable::Range(1, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mran));
+            CHECK(Enumerable::Range(6, 4).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mbid));
+            CHECK(Enumerable::Range(3, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(mforw));
+            CHECK(Enumerable::Range(-1, 8).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).SequenceEqual(minp));
+
+            CHECK(From(ran).ToMap([](auto i) { return i; }, [](auto i) { return i; }).SequenceEqual(mran));
+            CHECK(From(bid).ToMap([](auto i) { return i; }, [](auto i) { return i; }).SequenceEqual(mbid));
+            CHECK(From(forw).ToMap([](auto i) { return i; }, [](auto i) { return i; }).SequenceEqual(mforw));
+            CHECK(From(inp).ToMap([](auto i) { return i; }, [](auto i) { return i; }).SequenceEqual(minp));
+        }
+
+        SECTION("KeySelector + ValueSelector + KeyComparer")
+        {
+            std::map<int, int, std::greater<>> mran = From(ran).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> mbid = From(bid).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> mforw = From(forw).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>());
+            std::map<int, int, std::greater<>> minp = From(inp).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>());
+
+            CHECK(Enumerable::Range(1, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mran));
+            CHECK(Enumerable::Range(6, 4).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mbid));
+            CHECK(Enumerable::Range(3, 5).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(mforw));
+            CHECK(Enumerable::Range(-1, 8).Select([](auto i) -> std::pair<const int, int> { return std::make_pair(i, i); }).Reverse().SequenceEqual(minp));
+
+            CHECK(From(ran).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>()).SequenceEqual(mran));
+            CHECK(From(bid).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>()).SequenceEqual(mbid));
+            CHECK(From(forw).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>()).SequenceEqual(mforw));
+            CHECK(From(inp).ToMap([](auto i) { return i; },[](auto i) { return i; }, std::greater<>()).SequenceEqual(minp));
+        }
+    }
+
     SECTION("ToVector")
     {
         std::vector<int> vran = From(ran).ToVector();
         std::vector<int> vbid = From(bid).ToVector();
         std::vector<int> vforw = From(forw).ToVector();
         std::vector<int> vinp = From(inp).ToVector();
+
+        CHECK(Enumerable::Range(1, 5).SequenceEqual(vran));
+        CHECK(Enumerable::Range(6, 4).SequenceEqual(vbid));
+        CHECK(Enumerable::Range(3, 5).SequenceEqual(vforw));
+        CHECK(Enumerable::Range(-1, 8).SequenceEqual(vinp));
 
         CHECK(From(ran).ToVector().SequenceEqual(vran));
         CHECK(From(bid).ToVector().SequenceEqual(vbid));
