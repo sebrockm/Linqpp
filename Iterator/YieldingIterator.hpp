@@ -21,7 +21,6 @@ namespace Linqpp
         std::shared_ptr<std::thread> _spThread;
         std::shared_ptr<Yielding::ThreadController<T>> _spThreadController;
         size_t _position;
-        mutable bool _isIncrementDeferred = false;
 
     public:
         using iterator_category = std::input_iterator_tag;

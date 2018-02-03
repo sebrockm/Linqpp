@@ -44,7 +44,7 @@ namespace Linqpp
 
         SortingIterator& operator=(SortingIterator other)
         {
-            Swap(*this, other, std::is_copy_assignable<LessThanComparer>());
+            swap(*this, other);
             return *this;
         }
 
@@ -96,19 +96,26 @@ namespace Linqpp
             _isInitialized = true;
         }
 
+        friend void swap(SortingIterator& iterator1, SortingIterator& iterator2)
+        {
+            Swap(iterator1, iterator2, std::is_copy_assignable<LessThanComparer>());
+        }
+
         static void Swap(SortingIterator& iterator1, SortingIterator& iterator2, std::true_type)
         {
+            using std::swap;
             Swap(iterator1, iterator2, std::false_type());
-            std::swap(iterator1._comparer, iterator2._comparer);
+            swap(iterator1._comparer, iterator2._comparer);
         }
 
         static void Swap(SortingIterator& iterator1, SortingIterator& iterator2, std::false_type)
         {
-            std::swap(iterator1._first, iterator2._first);
-            std::swap(iterator1._last, iterator2._last);
-            std::swap(iterator1._spData, iterator2._spData);
-            std::swap(iterator1._position, iterator2._position);
-            std::swap(iterator1._isInitialized, iterator2._isInitialized);
+            using std::swap;
+            swap(iterator1._first, iterator2._first);
+            swap(iterator1._last, iterator2._last);
+            swap(iterator1._spData, iterator2._spData);
+            swap(iterator1._position, iterator2._position);
+            swap(iterator1._isInitialized, iterator2._isInitialized);
         }
     };
 

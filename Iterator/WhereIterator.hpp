@@ -34,7 +34,7 @@ namespace Linqpp
 
         WhereIterator& operator=(WhereIterator other)
         {
-            Swap(*this, other, std::is_copy_assignable<Predicate>());
+            swap(*this, other);
             return *this;
         }
 
@@ -59,16 +59,23 @@ namespace Linqpp
                 --_first;
         }
 
+        friend void swap(WhereIterator& iterator1, WhereIterator& iterator2)
+        {
+            Swap(iterator1, iterator2, std::is_copy_assignable<Predicate>());
+        }
+
         static void Swap(WhereIterator& iterator1, WhereIterator& iterator2, std::true_type)
         {
+            using std::swap;
             Swap(iterator1, iterator2, std::false_type());
-            std::swap(iterator1._predicate, iterator2._predicate);
+            swap(iterator1._predicate, iterator2._predicate);
         }
 
         static void Swap(WhereIterator& iterator1, WhereIterator& iterator2, std::false_type)
         {
-            std::swap(iterator1._first, iterator2._first);
-            std::swap(iterator1._last, iterator2._last);
+            using std::swap;
+            swap(iterator1._first, iterator2._first);
+            swap(iterator1._last, iterator2._last);
         }
     };
 

@@ -42,7 +42,7 @@ namespace Linqpp
 
         ZipIterator& operator=(ZipIterator other)
         {
-            Swap(*this, other, std::is_copy_assignable<BinaryFunction>());
+            Swap(*this, other);
             return *this;
         }
 
@@ -58,16 +58,23 @@ namespace Linqpp
 
     // Internals
     private:
+        friend void swap(ZipIterator& iterator1, ZipIterator& iterator2)
+        {
+            return Swap(iterator1, iterator2, std::is_copy_assignable<BinaryFunction>());
+        }
+
         static void Swap(ZipIterator& iterator1, ZipIterator& iterator2, std::true_type)
         {
+            using std::swap;
             Swap(iterator1, iterator2, std::false_type());
-            std::swap(iterator1._function, iterator2._function);
+            swap(iterator1._function, iterator2._function);
         }
 
         static void Swap(ZipIterator& iterator1, ZipIterator& iterator2, std::false_type)
         {
-            std::swap(iterator1._iterator1, iterator2._iterator1);
-            std::swap(iterator1._iterator2, iterator2._iterator2);
+            using std::swap;
+            swap(iterator1._iterator1, iterator2._iterator1);
+            swap(iterator1._iterator2, iterator2._iterator2);
         }
     };
 

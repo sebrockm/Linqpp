@@ -34,7 +34,7 @@ namespace Linqpp
 
         SelectIterator& operator=(SelectIterator other)
         {
-            Swap(*this, other, std::is_copy_assignable<UnaryFunction>());
+            swap(*this, other);
             return *this;
         }
 
@@ -50,15 +50,22 @@ namespace Linqpp
 
     // Internals
     private:
+        friend void swap(SelectIterator& iterator1, SelectIterator& iterator2)
+        {
+            Swap(iterator1, iterator2, std::is_copy_assignable<UnaryFunction>());
+        }
+
         static void Swap(SelectIterator& iterator1, SelectIterator& iterator2, std::true_type)
         {
-            std::swap(iterator1._iterator, iterator2._iterator);
-            std::swap(iterator1._function, iterator2._function);
+            using std::swap;
+            swap(iterator1._iterator, iterator2._iterator);
+            swap(iterator1._function, iterator2._function);
         }
 
         static void Swap(SelectIterator& iterator1, SelectIterator& iterator2, std::false_type)
         {
-            std::swap(iterator1._iterator, iterator2._iterator);
+            using std::swap;
+            swap(iterator1._iterator, iterator2._iterator);
         }
     };
 
