@@ -4,6 +4,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <set>
 #include <vector>
 
 #include "Distinct.hpp"
@@ -253,6 +254,17 @@ namespace Linqpp
 
             auto keyValuePairs = Select([=](value_type const& v) { return std::make_pair(keySelector(v), valueSelector(v)); });
             return ExtendingEnumerable<std::map<Key, Value, KeyComparer>>(keyValuePairs.begin(), keyValuePairs.end(), keyComparer);
+        }
+
+        auto ToSet() const { return ToSet(std::less<value_type>()); }
+
+        template <class LessThanComparer>
+        auto ToSet(LessThanComparer comparer) const
+        {
+            ExtendingEnumerable<std::set<value_type, LessThanComparer>> result(comparer);
+            for (auto const& value : *this)
+                result.insert(value);
+            return result;
         }
 
         auto ToVector() const { return ExtendingEnumerable<std::vector<value_type>>(begin(), end()); }

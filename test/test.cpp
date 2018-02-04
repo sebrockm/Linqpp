@@ -551,6 +551,45 @@ TEST_CASE("unit tests")
         }
     }
 
+    SECTION("ToSet")
+    {
+        SECTION("No Parameters")
+        {
+            std::set<int> vran = From(ran).ToSet();
+            std::set<int> vbid = From(bid).ToSet();
+            std::set<int> vforw = From(forw).ToSet();
+            std::set<int> vinp = From(inp).ToSet();
+
+            CHECK(Enumerable::Range(1, 5).SequenceEqual(vran));
+            CHECK(Enumerable::Range(6, 4).SequenceEqual(vbid));
+            CHECK(Enumerable::Range(3, 5).SequenceEqual(vforw));
+            CHECK(Enumerable::Range(-1, 8).SequenceEqual(vinp));
+
+            CHECK(From(ran).ToSet().SequenceEqual(vran));
+            CHECK(From(bid).ToSet().SequenceEqual(vbid));
+            CHECK(From(forw).ToSet().SequenceEqual(vforw));
+            CHECK(From(inp).ToSet().SequenceEqual(vinp));
+        }
+
+        SECTION("Comparer")
+        {
+            std::set<int, std::greater<>> vran = From(ran).ToSet(std::greater<>());
+            std::set<int, std::greater<>> vbid = From(bid).ToSet(std::greater<>());
+            std::set<int, std::greater<>> vforw = From(forw).ToSet(std::greater<>());
+            std::set<int, std::greater<>> vinp = From(inp).ToSet(std::greater<>());
+
+            CHECK(Enumerable::Range(1, 5).Reverse().SequenceEqual(vran));
+            CHECK(Enumerable::Range(6, 4).Reverse().SequenceEqual(vbid));
+            CHECK(Enumerable::Range(3, 5).Reverse().SequenceEqual(vforw));
+            CHECK(Enumerable::Range(-1, 8).Reverse().SequenceEqual(vinp));
+
+            CHECK(From(ran).ToSet(std::greater<>()).SequenceEqual(vran));
+            CHECK(From(bid).ToSet(std::greater<>()).SequenceEqual(vbid));
+            CHECK(From(forw).ToSet(std::greater<>()).SequenceEqual(vforw));
+            CHECK(From(inp).ToSet(std::greater<>()).SequenceEqual(vinp));
+        }
+    }
+
     SECTION("ToVector")
     {
         std::vector<int> vran = From(ran).ToVector();
