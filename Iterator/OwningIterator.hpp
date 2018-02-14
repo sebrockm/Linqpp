@@ -82,7 +82,7 @@ namespace Linqpp
                 return;
 
             if (_spData->empty())
-                _spData->assign(_first, _last);
+                *_spData = From(_first, _last).ToVector();
 
             if (_position == std::numeric_limits<size_t>::max())
                 _position = _spData->size();

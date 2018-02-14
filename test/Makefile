@@ -1,25 +1,29 @@
 CC = g++-5
-CFLAGS = -std=c++14 -Wall -pedantic -O3 -pthread -I..
+CFLAGS = -std=c++14 -Wall -pedantic -Wfatal-errors -O3 -pthread -I..
 
-all: test readme
+TEST_SRC = $(wildcard *test.cpp)
+TEST_OBJ = $(patsubst %.cpp, %.o, $(TEST_SRC))
+HEADERS = $(wildcard ../*.hpp ../Iterator/*.hpp)
 
-%.o: %.cpp ../*.hpp ../Iterator/*.hpp
+all: unit_tests readme
+
+$(TEST_OBJ):%.o:%.cpp $(HEADERS) test_template.hpp
 	$(CC) $(CFLAGS) -c $<
 
 catch.o: catch.cpp catch.hpp
 	$(CC) $(CFLAGS) -c $<
 
-test: test.o catch.o
-	$(CC) $(CFLAGS) $^ -o test.out
+unit_tests.out: $(TEST_OBJ) catch.o 
+	$(CC) $(CFLAGS) $^ -o $@
 
-readme: readme.o
-	$(CC) $(CFLAGS) $^ -o readme.out
+readme.out: readme.cpp $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@
 
-runreadme: readme
-	./readme.out
+unit_tests: unit_tests.out
 
-runtest: test
-	./test.out
+readme: readme.out
 
 clean:
-	rm -f *.out *.o
+	rm -f *.o readme.out unit_tests.out
+
+.PHONY: all unit_tests readme clean

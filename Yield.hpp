@@ -3,7 +3,6 @@
 #include <condition_variable>
 #include <exception>
 #include <functional>
-#include <memory>
 #include <mutex>
 #include <limits>
 #include <thread>
@@ -26,6 +25,9 @@ namespace Linqpp
             bool _finished = false;
             T _current;
             std::exception_ptr _spException;
+
+        public:
+            ThreadController() = default;
 
         public:
             void WaitForHost()
@@ -54,6 +56,7 @@ namespace Linqpp
                 _cv.notify_one();
             }
 
+            T const& GetValue() const { return _current; }
             T& GetValue() { return _current; }
 
             void SetException(std::exception_ptr spException) { _spException = spException; }
@@ -66,7 +69,6 @@ namespace Linqpp
 
             bool IsThreadFinished() const { return _finished; }
             void FinishThread() { _finished = true; }
-
         };
 
         template <class T>
@@ -132,7 +134,7 @@ namespace Linqpp
 
 #define yield_return(__value) \
             { \
-                __spThreadController->GetValue() = (__value); \
+                __spThreadController->GetValue() = std::move(__value); \
                 __spThreadController->SwitchToHost(); \
                 __spThreadController->WaitForHost(); \
                 if (__spThreadController->IsThreadFinished()) \

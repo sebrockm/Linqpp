@@ -86,7 +86,7 @@ namespace Linqpp
 
             if (_spData->empty())
             {
-                _spData->assign(_first, _last);
+                *_spData = From(_first, _last).ToVector();
                 std::sort(_spData->begin(), _spData->end(), _comparer);
             }
 

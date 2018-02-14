@@ -25,7 +25,7 @@ namespace Linqpp
             {
                 auto temp = *first;
                 if (temp > maxValue)
-                    maxValue = temp;
+                    maxValue = std::move(temp);
             }
             return maxValue;
         }
@@ -42,7 +42,7 @@ namespace Linqpp
             {
                 auto temp = *first;
                 if (temp < minValue)
-                    minValue = temp;
+                    minValue = std::move(temp);
             }
             return minValue;
         }
