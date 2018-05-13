@@ -16,18 +16,66 @@ namespace Linqpp
     namespace Yielding
     {
         template <class T>
-        class ThreadController
+        class YieldStorage
         {
         private:
+            T _value;
+
+        public:
+            T& Get() { return _value; }
+            
+            template <class _T>
+            void Set(_T&& value) { _value = std::forward<_T>(value); }
+        };
+
+        template <class T>
+        class YieldStorage<T&>
+        {
+        private:
+            T* _pValue;
+
+        public:
+            T& Get() { return *_pValue; }
+
+            template <class _T>
+            void Set(_T&& value) { _pValue = &value; }
+        };
+
+        template <class T>
+        class ThreadController : public std::enable_shared_from_this<ThreadController<T>>
+        {
+        private:
+            std::thread _thread;
             std::mutex _mutex;
             std::condition_variable _cv;
             bool _threadIsExecuting = false;
             bool _finished = false;
-            T _current;
             std::exception_ptr _spException;
+            YieldStorage<T> _current;
 
         public:
-            ThreadController() = default;
+            ThreadController(std::function<void(ThreadController*)> const& function)
+            {
+                _thread = std::thread(function, this);
+            }
+
+            ~ThreadController()
+            {
+                if (_thread.joinable())
+                    _thread.detach();
+
+                WaitForThread();
+                if (!IsThreadFinished())
+                {
+                    FinishThread();
+                    SwitchToThread();
+                }
+            }
+
+            ThreadController(ThreadController const&) = delete;
+            ThreadController(ThreadController&&) = delete;
+            ThreadController& operator=(ThreadController const&) = delete;
+            ThreadController& operator=(ThreadController&&) = delete;
 
         public:
             void WaitForHost()
@@ -56,8 +104,11 @@ namespace Linqpp
                 _cv.notify_one();
             }
 
-            T const& GetValue() const { return _current; }
-            T& GetValue() { return _current; }
+            T const& GetValue() const { return _current.Get(); }
+            T& GetValue() { return _current.Get(); }
+
+            template <class _T>
+            void SetValue(_T&& t) { _current.Set(std::forward<_T>(t)); }
 
             void SetException(std::exception_ptr spException) { _spException = spException; }
 
@@ -75,10 +126,10 @@ namespace Linqpp
         class YieldingEnumerable : public IEnumerable<YieldingIterator<T>>
         {
         private:
-            std::function<void(std::shared_ptr<ThreadController<T>>)> _function;
+            std::function<void(ThreadController<T>*)> _function;
 
         public:
-            YieldingEnumerable(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
+            YieldingEnumerable(std::function<void(ThreadController<T>*)> function)
                 : _function(std::move(function))
             { }
 
@@ -90,23 +141,8 @@ namespace Linqpp
         public:
             virtual YieldingIterator<T> begin() const override
             {
-                auto spThreadController = std::make_shared<ThreadController<T>>();
-                auto spThread = std::shared_ptr<std::thread>(new std::thread(_function, spThreadController), [=](std::thread* pThread)
-                {
-                    if (pThread->joinable())
-                        pThread->detach();
-                    delete pThread;
-
-                    spThreadController->WaitForThread();
-                    if (!spThreadController->IsThreadFinished())
-                    {
-                        spThreadController->FinishThread();
-                        spThreadController->SwitchToThread();
-                    }
-                });
-
                 static_assert(std::is_copy_assignable<YieldingIterator<T>>::value, "YieldingIterator is not copy assignable.");
-                return YieldingIterator<T>(std::move(spThread), std::move(spThreadController));
+                return YieldingIterator<T>(_function);
             }
 
             virtual YieldingIterator<T> end() const override
@@ -119,8 +155,9 @@ namespace Linqpp
 
 #define START_YIELDING(__type) \
     using __Type = __type; \
-    return Linqpp::Yielding::YieldingEnumerable<__Type>([=](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) \
+    return Linqpp::Yielding::YieldingEnumerable<__Type>([&](Linqpp::Yielding::ThreadController<__Type>* __pThreadController) \
     { \
+        auto __spThreadController = __pThreadController->shared_from_this(); \
         auto __onExit = Linqpp::Utility::on_exit([=] \
         { \
             __spThreadController->FinishThread(); \
@@ -130,11 +167,11 @@ namespace Linqpp
         { \
             __spThreadController->WaitForHost(); \
             if (__spThreadController->IsThreadFinished()) \
-                return; \
+                return;
 
 #define yield_return(__value) \
             { \
-                __spThreadController->GetValue() = std::move(__value); \
+                __spThreadController->SetValue(__value); \
                 __spThreadController->SwitchToHost(); \
                 __spThreadController->WaitForHost(); \
                 if (__spThreadController->IsThreadFinished()) \

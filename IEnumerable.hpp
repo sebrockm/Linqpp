@@ -81,14 +81,13 @@ namespace Linqpp
 
         auto Average() const
         {
-            auto avg = First() * 1.0;
-            size_t n = 1;
+            double n = 1;
+            auto avg = First() * n;
             for (auto const& i : Skip(1))
             {
-                avg *= (double)n;
-                ++n;
-                avg /= (double)n;
-                avg += i / (double)n;
+                avg *= n / (n + 1);
+                n += 1;
+                avg += i / n;
             }
 
             return avg;
@@ -130,6 +129,9 @@ namespace Linqpp
         {
             return Linqpp::Distinct(begin(), end(), std::forward<EqualityComparer>(comparer), std::forward<Hash>(hash));
         }
+
+        template <class TargetType>
+        auto DynamicCast() const { return InternalDynamicCast<TargetType>(nullptr); }
         
         decltype(auto) ElementAt(int64_t i) const { return Linqpp::ElementAt(begin(), i, iterator_category()); }
 
@@ -152,16 +154,15 @@ namespace Linqpp
         decltype(auto) Last() const { return Last([](auto) { return true; }); }
 
         template <class Predicate>
-        decltype(auto) Last(Predicate&& predicate) const { bool b; return Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category(), b); }
+        decltype(auto) Last(Predicate&& predicate) const { return Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category()); }
 
         value_type LastOrDefault() const { return Any() ? Last() : value_type(); }
 
         template <class Predicate>
         value_type LastOrDefault(Predicate&& predicate) const
         {
-            bool isValid;
-            auto found = Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category(), isValid);
-            return isValid ? found : value_type();
+            value_type defaultValue = value_type();
+            return Linqpp::Last(begin(), end(), std::forward<Predicate>(predicate), iterator_category(), &defaultValue);
         }
 
         decltype(auto) Max() const { return Linqpp::Max(begin(), end()); }
@@ -216,6 +217,9 @@ namespace Linqpp
         template <class Predicate> 
         auto SkipWhile(Predicate&& predicate) const { return From(Linqpp::SkipWhile(begin(), end(), std::forward<Predicate>(predicate)), end()); }
 
+        template <class TargetType>
+        auto StaticCast() const { return InternalStaticCast<TargetType>(nullptr); }
+
         auto Sum() const { return Aggregate(std::plus<>()); }
 
         template <class UnaryFunction>
@@ -226,31 +230,31 @@ namespace Linqpp
         template <class KeySelector>
         auto ToMap(KeySelector keySelector) const
         {
-            using Key = decltype(keySelector(std::declval<value_type>()));
+            using Key = decltype(keySelector(*begin()));
             return ToMap(keySelector, std::less<Key>());
         }
 
         template <class KeySelector, class KeyComparer,
-                 class Key = decltype(std::declval<KeySelector>()(std::declval<value_type>())),
-                 class = decltype(std::declval<KeyComparer>()(std::declval<value_type>(), std::declval<value_type>()))>
+                 class Key = decltype(std::declval<KeySelector>()(*std::declval<IEnumerable>().begin())),
+                 class = decltype(std::declval<KeyComparer>()(*std::declval<IEnumerable>().begin(), *std::declval<IEnumerable>().begin()))>
         auto ToMap(KeySelector keySelector, KeyComparer keyComparer) const
         { 
             auto keyValuePairs = Select([=](value_type const& v) { return std::make_pair(keySelector(v), v); });
             return ExtendingEnumerable<std::map<Key, value_type, KeyComparer>>(keyValuePairs.begin(), keyValuePairs.end(), keyComparer);
         }
 
-        template <class KeySelector, class ValueSelector, class = decltype(std::declval<ValueSelector>()(std::declval<value_type>()))> 
+        template <class KeySelector, class ValueSelector, class = decltype(std::declval<ValueSelector>()(*std::declval<IEnumerable>().begin()))> 
         auto ToMap(KeySelector keySelector, ValueSelector valueSelector) const
         {
-            using Key = decltype(keySelector(std::declval<value_type>()));
+            using Key = decltype(keySelector(*begin()));
             return ToMap(keySelector, valueSelector, std::less<Key>());
         }
 
         template <class KeySelector, class ValueSelector, class KeyComparer>
         auto ToMap(KeySelector keySelector, ValueSelector valueSelector, KeyComparer keyComparer) const
         {
-            using Key = decltype(keySelector(std::declval<value_type>()));
-            using Value = decltype(valueSelector(std::declval<value_type>()));
+            using Key = decltype(keySelector(*begin()));
+            using Value = decltype(valueSelector(*begin()));
 
             auto keyValuePairs = Select([=](value_type const& v) { return std::make_pair(keySelector(v), valueSelector(v)); });
             return ExtendingEnumerable<std::map<Key, Value, KeyComparer>>(keyValuePairs.begin(), keyValuePairs.end(), keyComparer);
@@ -298,23 +302,51 @@ namespace Linqpp
         }
 
     private:
+        template <class TargetType>
+        auto InternalDynamicCast(std::enable_if_t<std::is_reference<TargetType>::value>*) const
+        {
+            auto caster = [](value_type& t) -> TargetType { return dynamic_cast<TargetType>(t); };
+            return From(CreateSelectIterator(begin(), caster), CreateSelectIterator(end(), caster));
+        }
+
+        template <class TargetType>
+        auto InternalDynamicCast(std::enable_if_t<!std::is_reference<TargetType>::value>*) const
+        {
+            auto caster = [](value_type t) -> TargetType { return dynamic_cast<TargetType>(t); };
+            return From(CreateSelectIterator(begin(), caster), CreateSelectIterator(end(), caster));
+        }
+
         auto InternalReverse(std::bidirectional_iterator_tag) const { return From(std::make_reverse_iterator(end()), std::make_reverse_iterator(begin())); }
         auto InternalReverse(std::input_iterator_tag) const { return CreateOwningEnumerable(begin(), end()).Reverse(); }
 
         template <class UnaryFunction>
-        auto InternalSelect(UnaryFunction unaryFunction, decltype(std::declval<UnaryFunction>()(std::declval<value_type>()))*) const
+        auto InternalSelect(UnaryFunction unaryFunction, decltype(unaryFunction(*std::declval<IEnumerable>().begin()))*) const
         {
             return From(CreateSelectIterator(begin(), unaryFunction), CreateSelectIterator(end(), unaryFunction));
         }
 
         template <class UnaryFunctionWithIndex> 
-        auto InternalSelect(UnaryFunctionWithIndex&& unaryFunctionWithIndex, decltype(std::declval<UnaryFunctionWithIndex>()(std::declval<value_type>(), 0))*) const
+        auto InternalSelect(UnaryFunctionWithIndex unaryFunctionWithIndex, decltype(unaryFunctionWithIndex(*std::declval<IEnumerable>().begin(), 0))*) const
         {
-            return Zip(Enumerable::Range(0, Count()), std::forward<UnaryFunctionWithIndex>(unaryFunctionWithIndex));
+            return Zip(Enumerable::Range(0, Count()), unaryFunctionWithIndex);
+        }
+
+        template <class TargetType>
+        auto InternalStaticCast(std::enable_if_t<std::is_reference<TargetType>::value>*) const
+        {
+            auto caster = [](value_type& t) -> TargetType { return static_cast<TargetType>(t); };
+            return From(CreateSelectIterator(begin(), caster), CreateSelectIterator(end(), caster));
+        }
+
+        template <class TargetType>
+        auto InternalStaticCast(std::enable_if_t<!std::is_reference<TargetType>::value>*) const
+        {
+            auto caster = [](value_type t) -> TargetType { return static_cast<TargetType>(t); };
+            return From(CreateSelectIterator(begin(), caster), CreateSelectIterator(end(), caster));
         }
 
         template <class Predicate> 
-        auto InternalWhere(Predicate predicate, decltype(std::declval<Predicate>()(std::declval<value_type>()))*) const
+        auto InternalWhere(Predicate predicate, decltype(predicate(*std::declval<IEnumerable>().begin()))*) const
         {
             auto first = CreateWhereIterator(begin(), end(), predicate);
             auto last = CreateWhereIterator(end(), end(), predicate);
@@ -322,7 +354,7 @@ namespace Linqpp
         }
 
         template <class PredicateWithIndex> 
-        auto InternalWhere(PredicateWithIndex predicateWithIndex, decltype(std::declval<PredicateWithIndex>()(std::declval<value_type>(), 0))*) const
+        auto InternalWhere(PredicateWithIndex predicateWithIndex, decltype(predicateWithIndex(*std::declval<IEnumerable>().begin(), 0))*) const
         {
             return Zip(Enumerable::Range(0, Count()), [](auto const& v, auto i) { return std::pair<decltype(v), decltype(i)>(v, i); })
                 .Where([=](auto const& p) { return predicateWithIndex(p.first, p.second); }).Select([](auto const& p) { return p.first; });

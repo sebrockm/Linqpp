@@ -6,9 +6,9 @@
 namespace Linqpp
 {
     template <class BidirectionalIterator, class Predicate>
-    decltype(auto) Last(BidirectionalIterator first, BidirectionalIterator last, Predicate&& predicate, std::bidirectional_iterator_tag, bool& isValid)
+    decltype(auto) Last(BidirectionalIterator first, BidirectionalIterator last, Predicate&& predicate, std::bidirectional_iterator_tag,
+            typename std::iterator_traits<BidirectionalIterator>::value_type* pDefault = nullptr)
     {
-        isValid = true;
         while (first != last)
         {
             --last;
@@ -16,48 +16,46 @@ namespace Linqpp
                 return *last;
         }
 
-        isValid = false;
-        return *first;
+        return pDefault ? *pDefault : *first;
     }
 
     template <class ForwardIterator, class Predicate>
-    decltype(auto) Last(ForwardIterator first, ForwardIterator last, Predicate predicate, std::forward_iterator_tag, bool& isValid)
+    decltype(auto) Last(ForwardIterator first, ForwardIterator last, Predicate predicate, std::forward_iterator_tag,
+            typename std::iterator_traits<ForwardIterator>::value_type* pDefault = nullptr)
     {
-        isValid = false;
-        first = std::find_if(first, last, predicate);
+        auto found = std::find_if(first, last, predicate);
 
-        if (first == last)
-            return *first;
+        if (found == last)
+            return pDefault ? *pDefault : *first;
 
-        isValid = true;
         while (true)
         {
-            auto before = first;
-            first = std::find_if(++first, last, predicate);
-            if (first == last)
+            auto before = found;
+            found = std::find_if(++found, last, predicate);
+            if (found == last)
                 return *before;
         }
-        return *first;
+
+        return pDefault ? *pDefault : *first;
     }
 
     template <class InputIterator, class Predicate>
-    auto Last(InputIterator first, InputIterator last, Predicate predicate, std::input_iterator_tag, bool& isValid)
+    auto Last(InputIterator first, InputIterator last, Predicate predicate, std::input_iterator_tag,
+            typename std::iterator_traits<InputIterator>::value_type* pDefault = nullptr)
     {
-        isValid = false;
-        first = std::find_if(first, last, predicate);
+        auto found = std::find_if(first, last, predicate);
 
-        if (first == last)
-            return *first;
+        if (found == last)
+            return pDefault ? *pDefault : *first;
 
-        isValid = true;
         while (true)
         {
-            auto before = *first;
-            first = std::find_if(++first, last, predicate);
-            if (first == last)
+            auto before = *found;
+            found = std::find_if(++found, last, predicate);
+            if (found == last)
                 return before;
         }
 
-        return *first;
+        return pDefault ? *pDefault : *first;
     }
 }

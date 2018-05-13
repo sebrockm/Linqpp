@@ -2,7 +2,6 @@
 
 #include <limits>
 #include <memory>
-#include <thread>
 
 #include "IteratorAdapter.hpp"
 
@@ -18,7 +17,6 @@ namespace Linqpp
     class YieldingIterator : public IteratorAdapter<YieldingIterator<T>>
     {
     private:
-        std::shared_ptr<std::thread> _spThread;
         std::shared_ptr<Yielding::ThreadController<T>> _spThreadController;
         size_t _position;
 
@@ -30,15 +28,16 @@ namespace Linqpp
         using pointer = std::add_pointer_t<T>;
 
     public:
-        YieldingIterator(std::shared_ptr<std::thread> spThread, std::shared_ptr<Yielding::ThreadController<T>> spThreadController)
-            : _spThread(std::move(spThread)), _spThreadController(std::move(spThreadController)), _position(0)
+        YieldingIterator(std::function<void(Yielding::ThreadController<T>*)> const& function)
+            : _spThreadController(std::make_shared<Yielding::ThreadController<T>>(function)), _position(0)
         {
             Increment();
         }
 
         YieldingIterator()
-            : _position(std::numeric_limits<size_t>::max())
-        { }
+        {
+            MarkAsEnd();
+        }
 
         YieldingIterator(YieldingIterator<T> const&) = default;
         YieldingIterator(YieldingIterator<T>&&) = default;
@@ -46,12 +45,15 @@ namespace Linqpp
         YieldingIterator& operator=(YieldingIterator<T>&&) = default;
 
     public:
-        bool Equals(YieldingIterator<T> const& other) const { return _spThread == other._spThread && _position == other._position; }
+        bool Equals(YieldingIterator<T> const& other) const { return _spThreadController == other._spThreadController && _position == other._position; }
 
         reference Get() const { return _spThreadController->GetValue(); }
 
         void Increment()
         {
+            if (_spThreadController && _spThreadController->IsThreadFinished())
+                MarkAsEnd();
+
             if (_position == std::numeric_limits<size_t>::max())
                 return;
 
@@ -62,11 +64,14 @@ namespace Linqpp
             if (!_spThreadController->IsThreadFinished())
                 ++_position;
             else
-            {
-                _position = std::numeric_limits<size_t>::max();
-                _spThreadController = nullptr;
-                _spThread = nullptr;
-            }
+                MarkAsEnd();
+        }
+
+    private:
+        void MarkAsEnd()
+        {
+            _position = std::numeric_limits<size_t>::max();
+            _spThreadController = nullptr;
         }
     };
 }

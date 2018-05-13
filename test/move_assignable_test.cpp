@@ -18,13 +18,15 @@ struct Int
 
     Int& operator=(Int const&) = delete;
 
-    bool operator<(Int ii) const { return _i < ii._i; }
-    bool operator>(Int ii) const { return _i > ii._i; }
-    bool operator==(Int ii) const { return _i == ii._i; }
-    Int operator+(Int ii) const { return Int(_i + ii._i); }
-    Int operator-() const { return Int(-_i); }
-    explicit operator int() const { return _i; }
+    template <class _Int>
+    explicit operator _Int() const { return static_cast<_Int>(_i); }
 };
+
+bool operator<(Int i, Int j) { return i._i < j._i; }
+bool operator>(Int i, Int j) { return i._i > j._i; }
+bool operator==(Int i, Int j) { return i._i == j._i; }
+Int operator+(Int i, Int j) { return Int(i._i + j._i); }
+Int operator-(Int i) { return Int(-i._i); }
 
 namespace std
 {

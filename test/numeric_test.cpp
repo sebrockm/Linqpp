@@ -51,7 +51,8 @@ TEST_CASE("numeric tests")
 
         using namespace std::literals::complex_literals;
         std::vector<std::complex<double>> vec = { 1.0 + 2.0i, 4.0 - 6.0i, -3.0 + 4.0i, -5.0, 2.0i };
-        CHECK(From(vec).Average() == -0.6 + 0.4i);
+        CHECK(From(vec).Average().real() == Approx(-0.6));
+        CHECK(From(vec).Average().imag() == Approx(0.4));
     }
 
     SECTION("Sum")
@@ -70,6 +71,7 @@ TEST_CASE("numeric tests")
 
         using namespace std::literals::complex_literals;
         std::vector<std::complex<double>> vec = { 1.0 + 2.0i, 4.0 - 6.0i, -3.0 + 4.0i, -5.0, 2.0i };
-        CHECK(From(vec).Sum() == -3.0 + 2.0i);
+        CHECK(From(vec).Sum().real() == Approx(-3.0));
+        CHECK(From(vec).Sum().imag() == Approx(2.0));
     }
 }

@@ -92,7 +92,7 @@ SECTION("Any")
 SECTION("Concat")
 {
     CHECK(From(ran).Concat(ran).SequenceEqual(std::vector<test_t>{1, 2, 3, 4, 5, 1, 2, 3, 4, 5}));
-    CHECK(From(ran).Concat(bid).SequenceEqual(Enumerable::Range(1, 9)));
+    CHECK(From(ran).Concat(bid).SequenceEqual(Enumerable::Range(1, 9).StaticCast<test_t>()));
     CHECK(From(ran).Concat(forw).SequenceEqual(std::vector<test_t>{1, 2, 3, 4, 5, 3, 4, 5, 6, 7}));
     CHECK(From(ran).Concat(inp).SequenceEqual(std::vector<test_t>{1, 2, 3, 4, 5, -1, 0, 1, 2, 3, 4, 5, 6}));
 
@@ -152,6 +152,90 @@ SECTION("Distinct")
     CHECK(From(bid).Distinct().SequenceEqual(bid));
     CHECK(From(forw).Distinct().SequenceEqual(forw));
     CHECK(From(inp).Distinct().SequenceEqual(inp));
+}
+
+SECTION("DynamicCast")
+{
+    struct A
+    {
+        virtual ~A() { }
+        bool operator==(A const& other) const { return this == &other; }
+    };
+    struct B : A
+    {
+        bool operator==(B const& other) const { return this == &other; }
+    };
+    struct C : A
+    { };
+
+    constexpr size_t size = 9;
+
+    SECTION("Pointer")
+    {
+        std::vector<B*> bran(size, new B);
+        auto aran = From(bran).StaticCast<A*>();
+        std::list<B*> bbid(size, new B);
+        auto abid = From(bbid).StaticCast<A*>();
+        std::forward_list<B*> bforw(size, new B);
+        auto aforw = From(bforw).StaticCast<A*>();
+        auto binp = [=]
+        { 
+            START_YIELDING(B*)
+            for (size_t i = 0; i < size; ++i)
+                yield_return(bran[i]);
+            END_YIELDING
+        }();
+
+        CHECK(aran.DynamicCast<B*>().SequenceEqual(bran));
+        CHECK(abid.DynamicCast<B*>().SequenceEqual(bbid));
+        CHECK(aforw.DynamicCast<B*>().SequenceEqual(bforw));
+        CHECK(binp.StaticCast<A*>().DynamicCast<B*>().SequenceEqual(binp));
+
+        auto nullC = Enumerable::Repeat((C*)nullptr, size);
+
+        CHECK(aran.DynamicCast<C*>().SequenceEqual(nullC));
+        CHECK(abid.DynamicCast<C*>().SequenceEqual(nullC));
+        CHECK(aforw.DynamicCast<C*>().SequenceEqual(nullC));
+        CHECK(binp.StaticCast<A*>().DynamicCast<C*>().SequenceEqual(nullC));
+    }
+
+    SECTION("Reference")
+    {
+        std::vector<B> bran(size, B());
+        auto aran = From(bran).StaticCast<A&>();
+
+        std::list<B> bbid(size, B());
+        auto abid = From(bbid).StaticCast<A&>();
+
+        std::forward_list<B> bforw(size, B());
+        auto aforw = From(bforw).StaticCast<A&>();
+
+        auto binp = [&]
+        { 
+            START_YIELDING(B&)
+            for (size_t i = 0; i < size; ++i)
+                yield_return(bran[i]);
+            END_YIELDING
+        }();
+
+        auto ainp = [&]
+        { 
+            START_YIELDING(A&)
+            for (size_t i = 0; i < size; ++i)
+                yield_return(bran[i]);
+            END_YIELDING
+        }();
+
+        CHECK(aran.DynamicCast<B&>().SequenceEqual(bran));
+        CHECK(abid.DynamicCast<B&>().SequenceEqual(bbid));
+        CHECK(aforw.DynamicCast<B&>().SequenceEqual(bforw));
+        CHECK(ainp.DynamicCast<B&>().SequenceEqual(binp));
+
+        CHECK_THROWS_AS(aran.DynamicCast<C&>().SequenceEqual(aran), std::bad_cast);
+        CHECK_THROWS_AS(abid.DynamicCast<C&>().SequenceEqual(abid), std::bad_cast);
+        CHECK_THROWS_AS(aforw.DynamicCast<C&>().SequenceEqual(aforw), std::bad_cast);
+        CHECK_THROWS_AS(ainp.DynamicCast<C&>().SequenceEqual(ainp), std::bad_cast);
+    }
 }
 
 SECTION("ElementAt")
@@ -362,15 +446,15 @@ SECTION("SequenceEqual")
     CHECK_FALSE(From(inp).SequenceEqual(bid));
     CHECK_FALSE(From(inp).SequenceEqual(forw));
 
-    CHECK(Enumerable::Range(1, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(From(ran)));
-    CHECK(Enumerable::Range(6, 4).Select([](auto i) { return test_t(i); }).SequenceEqual(From(bid)));
-    CHECK(Enumerable::Range(3, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(From(forw)));
-    CHECK(Enumerable::Range(-1, 8).Select([](auto i) { return test_t(i); }).SequenceEqual(From(inp)));
+    CHECK(Enumerable::Range(1, 5).StaticCast<test_t>().SequenceEqual(From(ran)));
+    CHECK(Enumerable::Range(6, 4).StaticCast<test_t>().SequenceEqual(From(bid)));
+    CHECK(Enumerable::Range(3, 5).StaticCast<test_t>().SequenceEqual(From(forw)));
+    CHECK(Enumerable::Range(-1, 8).StaticCast<test_t>().SequenceEqual(From(inp)));
 
-    CHECK(From(ran).SequenceEqual(Enumerable::Range(1, 5).Select([](auto i) { return test_t(i); })));
-    CHECK(From(bid).SequenceEqual(Enumerable::Range(6, 4).Select([](auto i) { return test_t(i); })));
-    CHECK(From(forw).SequenceEqual(Enumerable::Range(3, 5).Select([](auto i) { return test_t(i); })));
-    CHECK(From(inp).SequenceEqual(Enumerable::Range(-1, 8).Select([](auto i) { return test_t(i); })));
+    CHECK(From(ran).SequenceEqual(Enumerable::Range(1, 5).StaticCast<test_t>()));
+    CHECK(From(bid).SequenceEqual(Enumerable::Range(6, 4).StaticCast<test_t>()));
+    CHECK(From(forw).SequenceEqual(Enumerable::Range(3, 5).StaticCast<test_t>()));
+    CHECK(From(inp).SequenceEqual(Enumerable::Range(-1, 8).StaticCast<test_t>()));
 }
 
 SECTION("Skip")
@@ -401,6 +485,14 @@ SECTION("SkipWhile")
 
     CHECK(From(inp).SkipWhile([](auto vi) { return vi < 4; }).Count() == 3);
     CHECK(From(inp).SkipWhile([](auto vi, auto i) { return i < 4; }).First() == 3);
+}
+
+SECTION("StaticCast")
+{
+    CHECK(From(ran).StaticCast<short>().SequenceEqual(From(ran).Select([](auto i) { return static_cast<short>(i); })));
+    CHECK(From(bid).StaticCast<short>().SequenceEqual(From(bid).Select([](auto i) { return static_cast<short>(i); })));
+    CHECK(From(forw).StaticCast<short>().SequenceEqual(From(forw).Select([](auto i) { return static_cast<short>(i); })));
+    CHECK(From(inp).StaticCast<short>().SequenceEqual(From(inp).Select([](auto i) { return static_cast<short>(i); })));
 }
 
 SECTION("Take")
@@ -502,10 +594,10 @@ SECTION("ToSet")
         std::set<test_t> vforw = From(forw).ToSet();
         std::set<test_t> vinp = From(inp).ToSet();
 
-        CHECK(Enumerable::Range(1, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(vran));
-        CHECK(Enumerable::Range(6, 4).Select([](auto i) { return test_t(i); }).SequenceEqual(vbid));
-        CHECK(Enumerable::Range(3, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(vforw));
-        CHECK(Enumerable::Range(-1, 8).Select([](auto i) { return test_t(i); }).SequenceEqual(vinp));
+        CHECK(Enumerable::Range(1, 5).StaticCast<test_t>().SequenceEqual(vran));
+        CHECK(Enumerable::Range(6, 4).StaticCast<test_t>().SequenceEqual(vbid));
+        CHECK(Enumerable::Range(3, 5).StaticCast<test_t>().SequenceEqual(vforw));
+        CHECK(Enumerable::Range(-1, 8).StaticCast<test_t>().SequenceEqual(vinp));
 
         CHECK(From(ran).ToSet().SequenceEqual(vran));
         CHECK(From(bid).ToSet().SequenceEqual(vbid));
@@ -520,10 +612,10 @@ SECTION("ToSet")
         std::set<test_t, std::greater<>> vforw = From(forw).ToSet(std::greater<>());
         std::set<test_t, std::greater<>> vinp = From(inp).ToSet(std::greater<>());
 
-        CHECK(Enumerable::Range(1, 5).Select([](auto i) { return test_t(i); }).Reverse().SequenceEqual(vran));
-        CHECK(Enumerable::Range(6, 4).Select([](auto i) { return test_t(i); }).Reverse().SequenceEqual(vbid));
-        CHECK(Enumerable::Range(3, 5).Select([](auto i) { return test_t(i); }).Reverse().SequenceEqual(vforw));
-        CHECK(Enumerable::Range(-1, 8).Select([](auto i) { return test_t(i); }).Reverse().SequenceEqual(vinp));
+        CHECK(Enumerable::Range(1, 5).StaticCast<test_t>().Reverse().SequenceEqual(vran));
+        CHECK(Enumerable::Range(6, 4).StaticCast<test_t>().Reverse().SequenceEqual(vbid));
+        CHECK(Enumerable::Range(3, 5).StaticCast<test_t>().Reverse().SequenceEqual(vforw));
+        CHECK(Enumerable::Range(-1, 8).StaticCast<test_t>().Reverse().SequenceEqual(vinp));
 
         CHECK(From(ran).ToSet(std::greater<>()).SequenceEqual(vran));
         CHECK(From(bid).ToSet(std::greater<>()).SequenceEqual(vbid));
@@ -539,10 +631,10 @@ SECTION("ToVector")
     std::vector<test_t> vforw = From(forw).ToVector();
     std::vector<test_t> vinp = From(inp).ToVector();
 
-    CHECK(Enumerable::Range(1, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(vran));
-    CHECK(Enumerable::Range(6, 4).Select([](auto i) { return test_t(i); }).SequenceEqual(vbid));
-    CHECK(Enumerable::Range(3, 5).Select([](auto i) { return test_t(i); }).SequenceEqual(vforw));
-    CHECK(Enumerable::Range(-1, 8).Select([](auto i) { return test_t(i); }).SequenceEqual(vinp));
+    CHECK(Enumerable::Range(1, 5).StaticCast<test_t>().SequenceEqual(vran));
+    CHECK(Enumerable::Range(6, 4).StaticCast<test_t>().SequenceEqual(vbid));
+    CHECK(Enumerable::Range(3, 5).StaticCast<test_t>().SequenceEqual(vforw));
+    CHECK(Enumerable::Range(-1, 8).StaticCast<test_t>().SequenceEqual(vinp));
 
     CHECK(From(ran).ToVector().SequenceEqual(vran));
     CHECK(From(bid).ToVector().SequenceEqual(vbid));
