@@ -42,7 +42,7 @@ namespace Linqpp
         };
 
         template <class T>
-        class ThreadController : public std::enable_shared_from_this<ThreadController<T>>
+        class ThreadController
         {
         private:
             std::thread _thread;
@@ -54,10 +54,7 @@ namespace Linqpp
             YieldStorage<T> _current;
 
         public:
-            ThreadController(std::function<void(ThreadController*)> const& function)
-            {
-                _thread = std::thread(function, this);
-            }
+            ThreadController() = default;
 
             ~ThreadController()
             {
@@ -78,6 +75,8 @@ namespace Linqpp
             ThreadController& operator=(ThreadController&&) = delete;
 
         public:
+            void SetThread(std::thread thread) { _thread = std::move(thread); }
+
             void WaitForHost()
             {
                 std::unique_lock<std::mutex> lock(_mutex);
@@ -94,12 +93,14 @@ namespace Linqpp
 
             void SwitchToHost()
             {
+                std::unique_lock<std::mutex> lock(_mutex);
                 _threadIsExecuting = false;
                 _cv.notify_all();
             }
 
             void SwitchToThread()
             {
+                std::unique_lock<std::mutex> lock(_mutex);
                 _threadIsExecuting = true;
                 _cv.notify_one();
             }
@@ -126,10 +127,10 @@ namespace Linqpp
         class YieldingEnumerable : public IEnumerable<YieldingIterator<T>>
         {
         private:
-            std::function<void(ThreadController<T>*)> _function;
+            std::function<void(std::shared_ptr<ThreadController<T>>)> _function;
 
         public:
-            YieldingEnumerable(std::function<void(ThreadController<T>*)> function)
+            YieldingEnumerable(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
                 : _function(std::move(function))
             { }
 
@@ -155,9 +156,8 @@ namespace Linqpp
 
 #define START_YIELDING(__type) \
     using __Type = __type; \
-    return Linqpp::Yielding::YieldingEnumerable<__Type>([&](Linqpp::Yielding::ThreadController<__Type>* __pThreadController) \
+    return Linqpp::Yielding::YieldingEnumerable<__Type>([&](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) mutable \
     { \
-        auto __spThreadController = __pThreadController->shared_from_this(); \
         auto __onExit = Linqpp::Utility::on_exit([=] \
         { \
             __spThreadController->FinishThread(); \

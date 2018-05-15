@@ -28,9 +28,10 @@ namespace Linqpp
         using pointer = std::add_pointer_t<T>;
 
     public:
-        YieldingIterator(std::function<void(Yielding::ThreadController<T>*)> const& function)
-            : _spThreadController(std::make_shared<Yielding::ThreadController<T>>(function)), _position(0)
+        YieldingIterator(std::function<void(std::shared_ptr<Yielding::ThreadController<T>>)> const& function)
+            : _spThreadController(std::make_shared<Yielding::ThreadController<T>>()), _position(0)
         {
+            _spThreadController->SetThread(std::thread(function, _spThreadController));
             Increment();
         }
 

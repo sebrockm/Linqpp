@@ -178,7 +178,7 @@ SECTION("DynamicCast")
         auto abid = From(bbid).StaticCast<A*>();
         std::forward_list<B*> bforw(size, new B);
         auto aforw = From(bforw).StaticCast<A*>();
-        auto binp = [=]
+        auto binp = [&]
         { 
             START_YIELDING(B*)
             for (size_t i = 0; i < size; ++i)
