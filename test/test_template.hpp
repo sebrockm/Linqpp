@@ -691,58 +691,6 @@ SECTION("Where")
     CHECK((inp).Where([](auto i) { return static_cast<int>(i) % 2 == 0; }).SequenceEqual(std::vector<test_t>{0, 2, 4, 6}));
 }
 
-SECTION("Yield")
-{
-    CHECK(testYield().Count() == 8);
-    CHECK(testYield().SequenceEqual(Enumerable::Range(-1, 8)));
-    CHECK(testYield().Take(100).SequenceEqual(testYield()));
-
-    CHECK(testYield().SequenceEqual(testYield()));
-    CHECK(testYield().SequenceEqual(From(testYield())));
-    CHECK(testYield().SequenceEqual(inp));
-    CHECK(testYield().SequenceEqual(From(inp)));
-
-    CHECK(From(testYield()).SequenceEqual(testYield()));
-    CHECK(From(testYield()).SequenceEqual(From(testYield())));
-    CHECK(From(testYield()).SequenceEqual(inp));
-    CHECK(From(testYield()).SequenceEqual(From(inp)));
-
-    CHECK(inp.SequenceEqual(testYield()));
-    CHECK(inp.SequenceEqual(From(testYield())));
-    CHECK(inp.SequenceEqual(inp));
-    CHECK(inp.SequenceEqual(From(inp)));
-
-    CHECK(From(inp).SequenceEqual(testYield()));
-    CHECK(From(inp).SequenceEqual(From(testYield())));
-    CHECK(From(inp).SequenceEqual(inp));
-    CHECK(From(inp).SequenceEqual(From(inp)));
-
-    auto inp1 = testYield();
-    auto inp2 = testYield();
-    CHECK(inp1.Count() == inp2.Count());
-    for (unsigned i = 0; i < inp.Count(); ++i)
-    {
-        CHECK(inp1.Take(i).Count() == i);
-        CHECK(inp2.Take(i).Count() == i);
-        CHECK(inp1.Take(i).SequenceEqual(inp2.Take(i)));
-
-        CHECK(inp1.Select([](auto i) { return i; }).Take(i).Count() == i);
-        CHECK(inp2.Select([](auto i) { return i; }).Take(i).Count() == i);
-        CHECK(inp1.Select([](auto i) { return i; }).Take(i).SequenceEqual(inp2.Take(i)));
-    }
-
-    auto thrower = []
-    {
-        START_YIELDING(test_t)
-        yield_return(1);
-        yield_return(2);
-        throw 3;
-        END_YIELDING
-    };
-
-    CHECK_THROWS_AS(thrower().Count(), int);
-}
-
 SECTION("Zip")
 {
     CHECK(From(ran).Zip(ran, [](auto i, auto j) { return std::make_pair(i, j); })
