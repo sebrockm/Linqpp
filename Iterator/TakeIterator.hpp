@@ -15,7 +15,8 @@ namespace Linqpp
         template <class RandomIterator>
         auto InternalGetEnumerableFromTake(RandomIterator first, size_t n, RandomIterator last, std::random_access_iterator_tag)
         {
-           return From(first, std::min(first + n, last));
+            using diff_t = typename std::iterator_traits<RandomIterator>::difference_type;
+            return From(first, first + std::min((diff_t) n, last - first));
         }
 
         template <class InputIterator, class Category>
