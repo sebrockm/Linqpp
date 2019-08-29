@@ -12,12 +12,12 @@ namespace Linqpp
     auto From(InputIterator first, InputIterator last);
 
     template <class InputIterator, class LessThanComparer>
-    auto Distinct(InputIterator first, InputIterator last, LessThanComparer&& comparer)
+    auto Distinct(InputIterator first, InputIterator last, LessThanComparer comparer)
     {
         using Value = typename std::iterator_traits<InputIterator>::value_type;
 
         auto distinguisher =
-            [spSet = std::make_shared<std::set<Value, LessThanComparer>>(std::forward<LessThanComparer>(comparer))]
+            [spSet = std::make_shared<std::set<Value, LessThanComparer>>(comparer)]
             (auto const& item)
         {
             return spSet->insert(item).second;
@@ -27,12 +27,12 @@ namespace Linqpp
     }
 
     template <class InputIterator, class EqualityComparer, class Hash>
-    auto Distinct(InputIterator first, InputIterator last, EqualityComparer&& comparer, Hash&& hash)
+    auto Distinct(InputIterator first, InputIterator last, EqualityComparer comparer, Hash hash)
     {
         using Value = typename std::iterator_traits<InputIterator>::value_type;
 
         auto distinguisher = 
-            [spSet = std::make_shared<std::unordered_set<Value, Hash, EqualityComparer>>(1024, std::forward<Hash>(hash), std::forward<EqualityComparer>(comparer))]
+            [spSet = std::make_shared<std::unordered_set<Value, Hash, EqualityComparer>>(1024, hash, comparer)]
             (auto const& item)
         {
             return spSet->insert(item).second;

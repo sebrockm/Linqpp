@@ -14,7 +14,7 @@ namespace Linqpp
             Function _function;
 
         public:
-            OnExit(Function const& function)
+            OnExit(Function  function)
                 : _function(function)
             { }
 
@@ -22,6 +22,6 @@ namespace Linqpp
         };
 
         template <class Function>
-        auto on_exit(Function&& function) { return OnExit<Function>(std::forward<Function>(function)); }
+        auto on_exit(Function function) { return OnExit<Function>(function); }
     }
 }

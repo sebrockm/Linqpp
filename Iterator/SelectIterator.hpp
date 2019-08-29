@@ -70,10 +70,10 @@ namespace Linqpp
     };
 
     template <class InputIterator, class UnaryFunction>
-    auto CreateSelectIterator(InputIterator iterator, UnaryFunction&& function)
+    auto CreateSelectIterator(InputIterator iterator, UnaryFunction function)
     {
-        static_assert(std::is_copy_assignable<SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>>::value, "SelectIterator is not copy assignable.");
+        static_assert(std::is_copy_assignable<SelectIterator<InputIterator, UnaryFunction>>::value, "SelectIterator is not copy assignable.");
 
-        return SelectIterator<InputIterator, std::remove_reference_t<UnaryFunction>>(iterator, std::forward<UnaryFunction>(function));
+        return SelectIterator<InputIterator, UnaryFunction>(iterator, function);
     }
 }

@@ -6,13 +6,13 @@
 namespace Linqpp
 {
     template <class BidirectionalIterator, class Predicate>
-    decltype(auto) Last(BidirectionalIterator first, BidirectionalIterator last, Predicate&& predicate, std::bidirectional_iterator_tag,
+    decltype(auto) Last(BidirectionalIterator first, BidirectionalIterator last, Predicate predicate, std::bidirectional_iterator_tag,
             typename std::iterator_traits<BidirectionalIterator>::value_type* pDefault = nullptr)
     {
         while (first != last)
         {
             --last;
-            if (std::forward<Predicate>(predicate)(*last))
+            if (predicate(*last))
                 return *last;
         }
 

@@ -80,10 +80,10 @@ namespace Linqpp
     };
 
     template <class InputIterator, class Predicate>
-    auto CreateWhereIterator(InputIterator first, InputIterator last, Predicate&& predicate)
+    auto CreateWhereIterator(InputIterator first, InputIterator last, Predicate predicate)
     {
-        static_assert(std::is_copy_assignable<WhereIterator<InputIterator, std::remove_reference_t<Predicate>>>::value, "WhereIterator is not copy assignable.");
+        static_assert(std::is_copy_assignable<WhereIterator<InputIterator, Predicate>>::value, "WhereIterator is not copy assignable.");
 
-        return WhereIterator<InputIterator, std::remove_reference_t<Predicate>>(first, last, std::forward<Predicate>(predicate));
+        return WhereIterator<InputIterator, std::remove_reference_t<Predicate>>(first, last, predicate);
     }
 }

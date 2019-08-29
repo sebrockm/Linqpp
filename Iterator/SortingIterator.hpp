@@ -120,11 +120,11 @@ namespace Linqpp
     };
 
     template <class InputIterator, class LessThanComparer>
-    auto CreateSortedEnumerable(InputIterator first, InputIterator last, LessThanComparer&& comparer)
+    auto CreateSortedEnumerable(InputIterator first, InputIterator last, LessThanComparer comparer)
     {
-        static_assert(std::is_copy_assignable<SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>>::value, "SortingIterator is not copy assignable.");
+        static_assert(std::is_copy_assignable<SortingIterator<InputIterator, LessThanComparer>>::value, "SortingIterator is not copy assignable.");
 
-        auto firstSorted = SortingIterator<InputIterator, std::remove_reference_t<LessThanComparer>>(first, last, std::forward<LessThanComparer>(comparer));
+        auto firstSorted = SortingIterator<InputIterator, LessThanComparer>(first, last, comparer);
         return From(firstSorted, firstSorted.GetEnd());
     }
 }
