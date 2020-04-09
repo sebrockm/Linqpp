@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Enumerable.hpp"
-#include "From.hpp"
-#include "Yield.hpp"
+#include "src/Enumerable.hpp"
+#include "src/From.hpp"
+#include "src/Yield.hpp"
 
 namespace Linqpp
 {
