@@ -8,7 +8,7 @@
 #include <thread>
 
 #include "IEnumerable.hpp"
-#include "Iterator/YieldingIterator.hpp"
+#include "iterator/YieldingIterator.hpp"
 #include "Utility.hpp"
 
 namespace Linqpp
