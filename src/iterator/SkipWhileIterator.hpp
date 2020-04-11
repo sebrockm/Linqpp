@@ -13,7 +13,7 @@ namespace Linqpp
     private:
         mutable InputIterator _first;
         InputIterator _last;
-        mutable bool _initialized = false;
+        mutable bool _isInitialized = false;
         Predicate _predicate;
 
     public:
@@ -42,15 +42,18 @@ namespace Linqpp
     public:
         bool Equals(SkipWhileIterator const& other) const 
         { 
-            if (!_initialized)
+            if (!_isInitialized)
                 Initialize();
+
+            if (!other._isInitialized)
+                other.Initialize();
 
             return _first == other._first;
         }
 
         reference Get() const
         {
-            if (!_initialized)
+            if (!_isInitialized)
                 Initialize();
 
             return *_first;
@@ -58,7 +61,7 @@ namespace Linqpp
 
         void Increment()
         {
-            if (!_initialized)
+            if (!_isInitialized)
                 Initialize();
 
             ++_first;
@@ -66,7 +69,7 @@ namespace Linqpp
 
         void Decrement()
         {
-            if (!_initialized)
+            if (!_isInitialized)
                 Initialize();
 
             --_first;
@@ -78,7 +81,7 @@ namespace Linqpp
         {
             for (; _first != _last && _predicate(*_first); ++_first);
 
-            _initialized = true;
+            _isInitialized = true;
         }
 
         template <class P = Predicate>
@@ -86,7 +89,7 @@ namespace Linqpp
         {
             for (size_t i = 0; _first != _last && _predicate(*_first, i); ++i, ++_first);
 
-            _initialized = true;
+            _isInitialized = true;
         }
 
         friend void swap(SkipWhileIterator& iterator1, SkipWhileIterator& iterator2)
@@ -106,6 +109,7 @@ namespace Linqpp
             using std::swap;
             swap(iterator1._first, iterator2._first);
             swap(iterator1._last, iterator2._last);
+            swap(iterator1._isInitialized, iterator2._isInitialized);
         }
     };
 

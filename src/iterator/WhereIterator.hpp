@@ -46,6 +46,9 @@ namespace Linqpp
             if (!_isInitialized)
                 Initialize();
 
+            if (!other._isInitialized)
+                other.Initialize();
+
             return _first == other._first;
         }
 
