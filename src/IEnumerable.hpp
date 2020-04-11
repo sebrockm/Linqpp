@@ -15,7 +15,6 @@
 #include "iterator/ConcatIterator.hpp"
 #include "iterator/OwningIterator.hpp"
 #include "iterator/SelectIterator.hpp"
-#include "iterator/SkipIterator.hpp"
 #include "iterator/SkipWhileIterator.hpp"
 #include "iterator/SortingIterator.hpp"
 #include "iterator/TakeIterator.hpp"
@@ -23,6 +22,7 @@
 #include "iterator/ZipIterator.hpp"
 #include "Last.hpp"
 #include "MinMax.hpp"
+#include "Skip.hpp"
 #include "Utility.hpp"
 
 namespace Linqpp
@@ -213,7 +213,7 @@ namespace Linqpp
                     comparer);
         }
 
-        auto Skip(size_t n) const { return GetEnumerableFromSkip(begin(), n, end()); }
+        auto Skip(size_t n) const { return GetEnumerableFromSkip(begin(), end(), n); }
 
         template <class Predicate> 
         auto SkipWhile(Predicate predicate) const { return GetEnumerableFromSkipWhile(begin(), end(), predicate); }
