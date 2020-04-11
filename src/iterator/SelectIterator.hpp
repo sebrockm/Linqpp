@@ -18,8 +18,8 @@ namespace Linqpp
     public:
         using iterator_category = typename std::iterator_traits<InputIterator>::iterator_category;
         using difference_type = typename std::iterator_traits<InputIterator>::difference_type;
-        using value_type = decltype(_function(*_iterator));
-        using reference = value_type;
+        using reference = decltype(_function(*_iterator));
+        using value_type = std::remove_reference_t<reference>;
         using pointer = DummyPointer<value_type>;
 
     // Constructors, destructor
