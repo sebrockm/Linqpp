@@ -1,3 +1,6 @@
+NPROCS = $(shell grep -c 'processor' /proc/cpuinfo)
+MAKEFLAGS += -j$(NPROCS)
+
 CC = g++-5
 CFLAGS = -std=c++14 -Wall -pedantic -Wfatal-errors -O3 -pthread -I..
 
