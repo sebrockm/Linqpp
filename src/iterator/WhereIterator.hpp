@@ -9,15 +9,16 @@ namespace Linqpp
     {
     // Fields
     private:
-        InputIterator _first;
+        mutable InputIterator _first;
         InputIterator _last;
+        mutable bool _isInitialized = false;
         Predicate _predicate;
 
     public:
         using iterator_category = std::conditional_t<
             std::is_base_of<std::bidirectional_iterator_tag, typename std::iterator_traits<InputIterator>::iterator_category>::value,
-                std::bidirectional_iterator_tag,
-                typename std::iterator_traits<InputIterator>::iterator_category>;
+            std::bidirectional_iterator_tag,
+            typename std::iterator_traits<InputIterator>::iterator_category>;
         using difference_type = typename std::iterator_traits<InputIterator>::difference_type;
         using value_type = typename std::iterator_traits<InputIterator>::value_type;
         using reference = typename std::iterator_traits<InputIterator>::reference;
@@ -26,7 +27,7 @@ namespace Linqpp
     // Constructors, destructor
     public:
         WhereIterator(InputIterator first, InputIterator last, Predicate predicate)
-            : _first(first), _last(last), _predicate(std::move(predicate)) { AdvanceUntilFit(); }
+            : _first(first), _last(last), _predicate(std::move(predicate)) { }
 
         WhereIterator() = default;
         WhereIterator(WhereIterator const&) = default;
@@ -40,13 +41,48 @@ namespace Linqpp
 
     // IteratorAdapter
     public:
-        bool Equals(WhereIterator const& other) const { return _first == other._first; }
-        reference Get() const { return *_first; }
-        void Increment() { ++_first; AdvanceUntilFit(); }
-        void Decrement() { --_first; DecreaseUntilFit(); }
+        bool Equals(WhereIterator const& other) const
+        {
+            if (!_isInitialized)
+                Initialize();
+
+            return _first == other._first;
+        }
+
+        reference Get() const
+        {
+            if (!_isInitialized)
+                Initialize();
+
+            return *_first;
+        }
+
+        void Increment()
+        {
+            if (!_isInitialized)
+                Initialize();
+
+            ++_first;
+            AdvanceUntilFit();
+        }
+
+        void Decrement()
+        {
+            if (!_isInitialized)
+                Initialize();
+
+            --_first;
+            DecreaseUntilFit();
+        }
 
     // Internals
     private:
+        void Initialize() const
+        {
+            for (; _first != _last && !_predicate(*_first); ++_first);
+            _isInitialized = true;
+        }
+
         void AdvanceUntilFit()
         {
             while (_first != _last && !_predicate(*_first))
@@ -76,6 +112,7 @@ namespace Linqpp
             using std::swap;
             swap(iterator1._first, iterator2._first);
             swap(iterator1._last, iterator2._last);
+            swap(iterator1._isInitialized, iterator2._isInitialized);
         }
     };
 
