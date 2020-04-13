@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "IteratorAdapter.hpp"
+#include "DummyPointer.hpp"
 
 namespace Linqpp
 {
@@ -16,63 +17,70 @@ namespace Linqpp
     template <class T>
     class YieldingIterator : public IteratorAdapter<YieldingIterator<T>>
     {
+        static_assert(!std::is_reference<T>::value, "Yielding funtions cannot return reference types.");
+
     private:
-        std::shared_ptr<Yielding::ThreadController<T>> _spThreadController;
-        size_t _position;
+        mutable std::shared_ptr<Yielding::ThreadController<T>> _spThreadController;
+        std::function<void(std::weak_ptr<Yielding::ThreadController<T>>)> _yieldingFunction;
 
     public:
         using iterator_category = std::input_iterator_tag;
         using value_type = T;
         using difference_type = std::ptrdiff_t;
-        using reference = std::add_lvalue_reference_t<T>;
-        using pointer = std::add_pointer_t<T>;
+        using reference = value_type;
+        using pointer = DummyPointer<value_type>;
 
     public:
-        YieldingIterator(std::function<void(std::shared_ptr<Yielding::ThreadController<T>>)> const& function)
-            : _spThreadController(std::make_shared<Yielding::ThreadController<T>>()), _position(0)
-        {
-            _spThreadController->SetThread(std::thread(function, _spThreadController));
-            Increment();
-        }
+        YieldingIterator(std::function<void(std::weak_ptr<Yielding::ThreadController<T>>)> yieldingFunction)
+            : _spThreadController(std::make_shared<Yielding::ThreadController<T>>()), _yieldingFunction(std::move(yieldingFunction))
+        { }
 
-        YieldingIterator()
-        {
-            MarkAsEnd();
-        }
-
+        YieldingIterator() = default;
         YieldingIterator(YieldingIterator<T> const&) = default;
         YieldingIterator(YieldingIterator<T>&&) = default;
         YieldingIterator& operator=(YieldingIterator<T> const&) = default;
         YieldingIterator& operator=(YieldingIterator<T>&&) = default;
 
     public:
-        bool Equals(YieldingIterator<T> const& other) const { return _spThreadController == other._spThreadController && _position == other._position; }
+        bool Equals(YieldingIterator<T> const& other) const
+        {
+            CheckInitialized();
+            other.CheckInitialized();
+            return _spThreadController == other._spThreadController;
+        }
 
-        reference Get() const { return _spThreadController->GetValue(); }
+        reference Get() const
+        {
+            CheckInitialized();
+            return _spThreadController->AwaitValueFromThread();
+        }
+
+        pointer operator->() const { return CreateDummyPointer(Get()); }
 
         void Increment()
         {
-            if (_spThreadController && _spThreadController->IsThreadFinished())
-                MarkAsEnd();
+            CheckInitialized();
 
-            if (_position == std::numeric_limits<size_t>::max())
+            if (!_spThreadController)
                 return;
+            
+            _spThreadController->ContinueYieldingThread();
 
-            _spThreadController->SwitchToThread();
-            _spThreadController->WaitForThread();
-            _spThreadController->TryRethrow();
-
-            if (!_spThreadController->IsThreadFinished())
-                ++_position;
-            else
-                MarkAsEnd();
+            if (_spThreadController->IsFinished())
+                MarkAsEndIterator();
         }
 
     private:
-        void MarkAsEnd()
+        void CheckInitialized() const
         {
-            _position = std::numeric_limits<size_t>::max();
-            _spThreadController = nullptr;
+            if (_spThreadController && !_spThreadController->IsInitialized())
+            {
+                _spThreadController->Initialize(std::move(_yieldingFunction), _spThreadController);
+                if (_spThreadController->IsFinished())
+                    MarkAsEndIterator();
+            }
         }
+
+        void MarkAsEndIterator() const { _spThreadController = nullptr; }
     };
 }

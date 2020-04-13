@@ -20,14 +20,14 @@ TEST_CASE("numeric tests")
         for (int i = -1; i < 7; ++i)
             yield_return(i);
         END_YIELDING
-    }();
+    };
 
     SECTION("Average")
     {
         CHECK(From(ran).Average() == Approx(3));
         CHECK(From(bid).Average() == Approx(7.5));
         CHECK(From(forw).Average() == Approx(5));
-        CHECK(inp.Average() == Approx(2.5));
+        CHECK(inp().Average() == Approx(2.5));
 
         long long n = 1'000'000;
         CHECK(Enumerable::Range(1, n).Average() == Approx((n + 1) / 2.0));
@@ -66,8 +66,8 @@ TEST_CASE("numeric tests")
         CHECK(From(forw).Sum() == 25);
         CHECK(From(forw).Sum([](auto i) { return i * i; }) == 135);
 
-        CHECK(From(inp).Sum() == 20);
-        CHECK(From(inp).Sum([](auto i) { return i * i; }) == 92);
+        CHECK(From(inp()).Sum() == 20);
+        CHECK(From(inp()).Sum([](auto i) { return i * i; }) == 92);
 
         using namespace std::literals::complex_literals;
         std::vector<std::complex<double>> vec = { 1.0 + 2.0i, 4.0 - 6.0i, -3.0 + 4.0i, -5.0, 2.0i };

@@ -3,70 +3,43 @@
 #include <condition_variable>
 #include <exception>
 #include <functional>
+#include <memory>
 #include <mutex>
-#include <limits>
 #include <thread>
 
 #include "IEnumerable.hpp"
 #include "iterator/YieldingIterator.hpp"
-#include "Utility.hpp"
 
 namespace Linqpp
 {
     namespace Yielding
     {
         template <class T>
-        class YieldStorage
-        {
-        private:
-            T _value;
-
-        public:
-            T& Get() { return _value; }
-            
-            template <class _T>
-            void Set(_T&& value) { _value = std::forward<_T>(value); }
-        };
-
-        template <class T>
-        class YieldStorage<T&>
-        {
-        private:
-            T* _pValue;
-
-        public:
-            T& Get() { return *_pValue; }
-
-            template <class _T>
-            void Set(_T&& value) { _pValue = &value; }
-        };
-
-        template <class T>
         class ThreadController
         {
+            enum class ThreadStatus
+            {
+                Uninitialized,
+                ThreadIsWorking,
+                CallerIsWorking,
+                ThreadFinished
+            };
+
         private:
-            std::thread _thread;
+            std::thread _yieldingThread;
             std::mutex _mutex;
             std::condition_variable _cv;
-            bool _threadIsExecuting = false;
-            bool _finished = false;
+            std::unique_ptr<T> _spCurrentValue;
             std::exception_ptr _spException;
-            YieldStorage<T> _current;
+            ThreadStatus _threadStatus = ThreadStatus::Uninitialized;
 
         public:
             ThreadController() = default;
 
             ~ThreadController()
             {
-                if (_thread.joinable())
-                    _thread.detach();
-
-                WaitForThread();
-                if (!IsThreadFinished())
-                {
-                    FinishThread();
-                    SwitchToThread();
-                }
+                if (_yieldingThread.joinable())
+                    _yieldingThread.join();
             }
 
             ThreadController(ThreadController const&) = delete;
@@ -74,64 +47,128 @@ namespace Linqpp
             ThreadController& operator=(ThreadController const&) = delete;
             ThreadController& operator=(ThreadController&&) = delete;
 
+        // Methods to be called from main thread only
         public:
-            void SetThread(std::thread thread) { _thread = std::move(thread); }
-
-            void WaitForHost()
+            template <class YieldingFunction>
+            void Initialize(YieldingFunction yieldingFunction, std::weak_ptr<ThreadController> spThreadController)
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                while (!_threadIsExecuting)
+
+                if (_threadStatus != ThreadStatus::Uninitialized)
+                    throw std::logic_error("Attempt to assign a new yielding thread to already initialized thread controller.");
+
+                _threadStatus = ThreadStatus::ThreadIsWorking;
+                _yieldingThread = std::thread(std::move(yieldingFunction), std::move(spThreadController));
+
+                while (_threadStatus == ThreadStatus::ThreadIsWorking)
                     _cv.wait(lock);
             }
 
-            void WaitForThread()
+            bool IsInitialized()
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                while (_threadIsExecuting)
-                    _cv.wait(lock);
+                return _threadStatus != ThreadStatus::Uninitialized;
             }
 
-            void SwitchToHost()
+            T AwaitValueFromThread()
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                _threadIsExecuting = false;
+
+                if (_threadStatus == ThreadStatus::Uninitialized)
+                    throw std::runtime_error("Thread controller has not been initialized yet.");
+
+                while (_threadStatus == ThreadStatus::ThreadIsWorking)
+                    _cv.wait(lock);
+
+                return std::move(*_spCurrentValue);
+            }
+
+            void ContinueYieldingThread()
+            {
+                {
+                    std::unique_lock<std::mutex> lock(_mutex);
+
+                    if (_threadStatus == ThreadStatus::Uninitialized)
+                        throw std::runtime_error("Thread controller has not been initialized yet.");
+
+                    if (_threadStatus == ThreadStatus::ThreadFinished)
+                        return;
+
+                    _threadStatus = ThreadStatus::ThreadIsWorking;
+                }
+                _cv.notify_one();
+
+                {
+                    std::unique_lock<std::mutex> lock(_mutex);
+
+                    while (_threadStatus == ThreadStatus::ThreadIsWorking)
+                        _cv.wait(lock);
+
+                    if (_spException)
+                        std::rethrow_exception(_spException);
+                }
+            }
+
+            bool IsFinished()
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                return _threadStatus == ThreadStatus::ThreadFinished;
+            }
+
+        // Methods to be called from yielding thread only
+        public:
+            template <class _T>
+            void PassValueToCaller(_T&& t)
+            {
+                {
+                    std::unique_lock<std::mutex> lock(_mutex);
+                    _spCurrentValue = std::make_unique<T>(std::forward<_T>(t));
+                    _threadStatus = ThreadStatus::CallerIsWorking;
+                }
+                _cv.notify_all();
+                WaitForCaller();
+            }
+
+            void PassExceptionToCaller(std::exception_ptr spException)
+            {
+                {
+                    std::unique_lock<std::mutex> lock(_mutex);
+                    _spException = std::move(spException);
+                    _threadStatus = ThreadStatus::CallerIsWorking;
+                }
+                _cv.notify_all();
+                WaitForCaller();
+            }
+
+            void PassThreadFinishedNotificationToCaller()
+            {
+                {
+                    std::unique_lock<std::mutex> lock(_mutex);
+                    _threadStatus = ThreadStatus::ThreadFinished;
+                }
                 _cv.notify_all();
             }
 
-            void SwitchToThread()
+        private:
+            void WaitForCaller()
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                _threadIsExecuting = true;
-                _cv.notify_one();
+
+                while (_threadStatus == ThreadStatus::CallerIsWorking)
+                    _cv.wait(lock);
             }
-
-            T const& GetValue() const { return _current.Get(); }
-            T& GetValue() { return _current.Get(); }
-
-            template <class _T>
-            void SetValue(_T&& t) { _current.Set(std::forward<_T>(t)); }
-
-            void SetException(std::exception_ptr spException) { _spException = spException; }
-
-            void TryRethrow() const
-            {
-                if (_spException)
-                    std::rethrow_exception(_spException);
-            }
-
-            bool IsThreadFinished() const { return _finished; }
-            void FinishThread() { _finished = true; }
         };
 
         template <class T>
         class YieldingEnumerable : public IEnumerable<YieldingIterator<T>>
         {
         private:
-            std::function<void(std::shared_ptr<ThreadController<T>>)> _function;
+            YieldingIterator<T> _first;
+            YieldingIterator<T> _last;
 
         public:
-            YieldingEnumerable(std::function<void(std::shared_ptr<ThreadController<T>>)> function)
-                : _function(std::move(function))
+            YieldingEnumerable(std::function<void(std::weak_ptr<Yielding::ThreadController<T>>)> yieldingFunction)
+                : _first(std::move(yieldingFunction)), _last()
             { }
 
             YieldingEnumerable(YieldingEnumerable const&) = default;
@@ -140,48 +177,35 @@ namespace Linqpp
             YieldingEnumerable& operator=(YieldingEnumerable&&) = default;
 
         public:
-            virtual YieldingIterator<T> begin() const override
-            {
-                static_assert(std::is_copy_assignable<YieldingIterator<T>>::value, "YieldingIterator is not copy assignable.");
-                return YieldingIterator<T>(_function);
-            }
-
-            virtual YieldingIterator<T> end() const override
-            {
-                return YieldingIterator<T>();
-            }
+            virtual YieldingIterator<T> begin() const override { return _first; }
+            virtual YieldingIterator<T> end() const override { return _last; }
         };
     }
 }
 
 #define START_YIELDING(__type) \
     using __Type = __type; \
-    return Linqpp::Yielding::YieldingEnumerable<__Type>([&](std::shared_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) mutable \
+    return Linqpp::Yielding::YieldingEnumerable<__Type>([=](std::weak_ptr<Linqpp::Yielding::ThreadController<__Type>> __spThreadController) mutable \
     { \
-        auto __onExit = Linqpp::Utility::on_exit([=] \
-        { \
-            __spThreadController->FinishThread(); \
-            __spThreadController->SwitchToHost(); \
-        }); \
         try \
-        { \
-            __spThreadController->WaitForHost(); \
-            if (__spThreadController->IsThreadFinished()) \
-                return;
+        {
 
 #define yield_return(__value) \
             { \
-                __spThreadController->SetValue(__value); \
-                __spThreadController->SwitchToHost(); \
-                __spThreadController->WaitForHost(); \
-                if (__spThreadController->IsThreadFinished()) \
-                    return; \
+                auto __spThreadController2 = __spThreadController.lock(); \
+                if (__spThreadController2) \
+                    __spThreadController2->PassValueToCaller(__value); \
             }
 
 #define END_YIELDING \
         } \
         catch (...) \
         { \
-            __spThreadController->SetException(std::current_exception()); \
+            auto __spThreadController2 = __spThreadController.lock(); \
+            if (__spThreadController2) \
+                __spThreadController2->PassExceptionToCaller(std::current_exception()); \
         } \
+        auto __spThreadController2 = __spThreadController.lock(); \
+        if (__spThreadController2) \
+            __spThreadController2->PassThreadFinishedNotificationToCaller(); \
     });
