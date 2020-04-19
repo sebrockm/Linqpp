@@ -27,3 +27,14 @@
 *.exe
 *.out
 *.app
+
+# VS files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+Debug/
+Release/
+x86/
+x64/
