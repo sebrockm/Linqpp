@@ -201,6 +201,8 @@ SECTION("DynamicCast")
     SECTION("Reference")
     {
         std::vector<Derived1> bran(size, Derived1());
+        auto branPointers = From(bran).Select([](auto& b) { return &b; }).ToVector();
+
         auto aran = From(bran).StaticCast<Base&>();
 
         std::list<Derived1> bbid(size, Derived1());
@@ -213,15 +215,15 @@ SECTION("DynamicCast")
         {
             START_YIELDING(Derived1*)
             for (size_t i = 0; i < size; ++i)
-                yield_return(&bran[i]);
+                yield_return(branPointers[i]);
             END_YIELDING
         };
 
         auto ainp = [&]
         {
             START_YIELDING(Base*)
-                for (size_t i = 0; i < size; ++i)
-                    yield_return(&bran[i]);
+            for (size_t i = 0; i < size; ++i)
+                yield_return(branPointers[i]);
             END_YIELDING
         };
 

@@ -83,7 +83,7 @@ namespace Linqpp
     {
         static_assert(std::is_copy_assignable<ZipIterator<InputIterator1, InputIterator2, BinaryFunction>>::value, "ZipIterator is not copy assignable.");
 
-        return ZipIterator<InputIterator1, InputIterator2, std::remove_reference_t<BinaryFunction>>(iterator1, iterator2, function);
+        return ZipIterator<InputIterator1, InputIterator2, BinaryFunction>(iterator1, iterator2, function);
     }
 
     template <class InputIterator>

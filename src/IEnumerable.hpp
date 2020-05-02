@@ -67,9 +67,9 @@ namespace Linqpp
         }
 
         template <class Seed, class BinaryFunction, class ResultSelector>
-        auto Aggregate(Seed const& seed, BinaryFunction binaryFunction, ResultSelector&& resultSelector) const
+        auto Aggregate(Seed const& seed, BinaryFunction binaryFunction, ResultSelector resultSelector) const
         {
-            return std::forward<ResultSelector>(resultSelector)(Aggregate(seed, binaryFunction));
+            return resultSelector(Aggregate(seed, binaryFunction));
         }
 
         bool Any() const { return begin() != end(); }
@@ -105,11 +105,11 @@ namespace Linqpp
             return From(first, last);
         }
 
-        template <class T, class EqualityComparer>
-        auto Contains(T const& t, EqualityComparer comparer) const { return Any([&](const auto& t2) { return comparer(t, t2); }); }
-
         template <class T>
         auto Contains(T const& t) const { return Contains(t, std::equal_to<>()); }
+
+        template <class T, class EqualityComparer>
+        auto Contains(T const& t, EqualityComparer comparer) const { return Any([&](const auto& t2) { return comparer(t, t2); }); }
 
         size_t Count() const { return std::distance(begin(), end()); }
 
@@ -329,7 +329,7 @@ namespace Linqpp
         template <class UnaryFunctionWithIndex> 
         auto InternalSelect(UnaryFunctionWithIndex unaryFunctionWithIndex, decltype(unaryFunctionWithIndex(*std::declval<IEnumerable>().begin(), 0))*) const
         {
-            return Zip(Enumerable::Range(0, Count()), unaryFunctionWithIndex);
+            return Zip(Enumerable::Range(0, std::numeric_limits<int64_t>::max()), unaryFunctionWithIndex);
         }
 
         template <class TargetType>
@@ -357,7 +357,7 @@ namespace Linqpp
         template <class PredicateWithIndex> 
         auto InternalWhere(PredicateWithIndex predicateWithIndex, decltype(predicateWithIndex(*std::declval<IEnumerable>().begin(), 0))*) const
         {
-            return Zip(Enumerable::Range(0, Count()), [](auto const& v, auto i) { return std::pair<decltype(v), decltype(i)>(v, i); })
+            return Zip(Enumerable::Range(0, std::numeric_limits<int64_t>::max()), [](auto const& v, auto i) { return std::pair<decltype(v), decltype(i)>(v, i); })
                 .Where([=](auto const& p) { return predicateWithIndex(p.first, p.second); }).Select([](auto const& p) { return p.first; });
         }
     };
